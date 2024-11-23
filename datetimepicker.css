@@ -1,0 +1,40 @@
+.datetime-container {
+    margin: 10px;
+}
+
+.datetime-picker {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.calendar-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.time-display {
+    margin: 10px 0;
+    font-weight: bold;
+}
+
+.slider-container label {
+    display: block;
+}
+
+input[type='range'] {
+    width: 100%;
+}
+
+button,
+input[type='text'] {
+    margin: 5px 0;
+}
