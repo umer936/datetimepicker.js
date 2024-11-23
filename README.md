@@ -12,6 +12,13 @@ A flexible and customizable JavaScript DateTime picker that supports inline, inp
 - **UTC/local time** toggle to switch between UTC and local time formats.
 - **Bootstrap 5 styling** support for easy integration with Bootstrap-based UIs.
 - **Multi-language support** based on JavaScript's `Intl` object.
+## Inspiration
+
+This DateTimePicker library is inspired by many JS libraries that have come before, including:
+
+- **[Trent Richardson's Timepicker](https://trentrichardson.com/examples/timepicker/)**: jQuery UI timepicker with sliders
+- **[Flatpickr](https://flatpickr.js.org/)**
+- **[Ant Design (Antd)](https://ant.design/components/time-picker)**
 
 ## Installation
 
