@@ -25,9 +25,21 @@
 
 <script src="datetimepicker.js"></script>
 <script>
-    DateTimePicker.init(document.getElementById('inline-picker'), { mode: 'inline', showDOYtoggle: true });
-    DateTimePicker.init(document.getElementById('input-picker'), { mode: 'input', showDOYtoggle: true });
-    DateTimePicker.init(document.getElementById('button-picker'), { mode: 'button', showDOYtoggle: true });
+    DateTimePicker.init(document.getElementById('inline-picker'), {
+        mode: 'inline',
+        showDOYtoggle: true,
+        slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
+    });
+    DateTimePicker.init(document.getElementById('input-picker'), {
+        mode: 'input',
+        showDOYtoggle: true,
+        slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
+    });
+    DateTimePicker.init(document.getElementById('button-picker'), {
+        mode: 'button',
+        showDOYtoggle: true,
+        slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
+    });
 </script>
 </body>
 </html>

@@ -10,6 +10,7 @@
         onDateSelect: null, // Callback for when a date is selected
         onTimeChange: null, // Callback for when time changes
         setNowIncludesTime: false, // Whether "Now" updates the time
+        slidersToShow: ['hours', 'minutes'], // Default: Show hours and minutes sliders
     };
 
     class DateTimePicker {
@@ -89,14 +90,22 @@
         }
 
         getSlidersHTML() {
-            return `
-                <div class="slider-container mb-3">
-                    ${this.getSliderHTML('hours', 'Hours', 0, 23)}
-                    ${this.getSliderHTML('minutes', 'Minutes', 0, 59)}
-                    ${this.getSliderHTML('seconds', 'Seconds', 0, 59)}
-                    ${this.getSliderHTML('nanoseconds', 'Nanoseconds', 0, 999999999)}
-                </div>
-            `;
+            const sliders = this.settings.slidersToShow.map(slider => {
+                switch (slider) {
+                    case 'hours':
+                        return this.getSliderHTML('hours', 'Hours', 0, 23);
+                    case 'minutes':
+                        return this.getSliderHTML('minutes', 'Minutes', 0, 59);
+                    case 'seconds':
+                        return this.getSliderHTML('seconds', 'Seconds', 0, 59);
+                    case 'nanoseconds':
+                        return this.getSliderHTML('nanoseconds', 'Nanoseconds', 0, 999999999);
+                    default:
+                        return '';
+                }
+            }).join('');
+
+            return `<div class="slider-container mb-3">${sliders}</div>`;
         }
 
         getSliderHTML(id, label, min, max) {
@@ -143,10 +152,13 @@
             this.monthSelect = container.querySelector('#monthSelect');
             this.yearSelect = container.querySelector('#yearSelect');
             this.calendar = container.querySelector('#calendar');
-            this.hoursSlider = container.querySelector('#hours');
-            this.minutesSlider = container.querySelector('#minutes');
-            this.secondsSlider = container.querySelector('#seconds');
-            this.nanosecondsSlider = container.querySelector('#nanoseconds');
+
+            // Only cache the sliders if they exist
+            this.hoursSlider = this.settings.slidersToShow.includes('hours') ? container.querySelector('#hours') : null;
+            this.minutesSlider = this.settings.slidersToShow.includes('minutes') ? container.querySelector('#minutes') : null;
+            this.secondsSlider = this.settings.slidersToShow.includes('seconds') ? container.querySelector('#seconds') : null;
+            this.nanosecondsSlider = this.settings.slidersToShow.includes('nanoseconds') ? container.querySelector('#nanoseconds') : null;
+
             this.utcToggle = container.querySelector('#utc-toggle');
             this.doyToggle = container.querySelector('#doy-toggle');
             this.selectedDatetime = container.querySelector('#selected-datetime');
@@ -171,9 +183,19 @@
             prevMonthButton.addEventListener('click', () => this.changeMonth(-1));
             nextMonthButton.addEventListener('click', () => this.changeMonth(1));
 
-            [this.hoursSlider, this.minutesSlider, this.secondsSlider, this.nanosecondsSlider].forEach((slider) =>
-                slider.addEventListener('input', () => this.updateSelectedDatetime())
-            );
+            // Only add event listeners to sliders that exist
+            if (this.hoursSlider) {
+                this.hoursSlider.addEventListener('input', () => this.updateSelectedDatetime());
+            }
+            if (this.minutesSlider) {
+                this.minutesSlider.addEventListener('input', () => this.updateSelectedDatetime());
+            }
+            if (this.secondsSlider) {
+                this.secondsSlider.addEventListener('input', () => this.updateSelectedDatetime());
+            }
+            if (this.nanosecondsSlider) {
+                this.nanosecondsSlider.addEventListener('input', () => this.updateSelectedDatetime());
+            }
 
             this.utcToggle.addEventListener('change', () => this.updateSelectedDatetime());
             this.doyToggle.addEventListener('change', () => this.renderCalendar());
@@ -345,10 +367,19 @@
 
         updateSelectedDatetime() {
             const date = new Date(this.selectedDate);
-            date.setHours(this.hoursSlider.value);
-            date.setMinutes(this.minutesSlider.value);
-            date.setSeconds(this.secondsSlider.value);
-            date.setMilliseconds(this.nanosecondsSlider.value / 1e6);
+
+            if (this.hoursSlider) {
+                date.setHours(this.hoursSlider.value);
+            }
+            if (this.minutesSlider) {
+                date.setMinutes(this.minutesSlider.value);
+            }
+            if (this.secondsSlider) {
+                date.setSeconds(this.secondsSlider.value);
+            }
+            if (this.nanosecondsSlider) {
+                date.setMilliseconds(this.nanosecondsSlider.value / 1e6); // Convert nanoseconds to milliseconds
+            }
 
             const datetimeString = this.utcToggle.checked
                 ? date.toISOString()
