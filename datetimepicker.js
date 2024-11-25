@@ -194,16 +194,26 @@
         changeMonth(delta) {
             const currentMonth = this.selectedDate.getMonth();
             this.selectedDate.setMonth(currentMonth + delta);
-            this.renderCalendar();
-            this.updateSelectedDatetime();
+
+            // Sync dropdowns with the updated selectedDate
+            this.monthSelect.value = this.selectedDate.getMonth();
+            this.yearSelect.value = this.selectedDate.getFullYear();
+
+            this.renderCalendar(); // Re-render the calendar
+            this.updateSelectedDatetime(); // Update the datetime display
         }
 
         handleYearInputChange(event) {
             const year = parseInt(event.target.value, 10);
             if (!isNaN(year)) {
                 this.selectedDate.setFullYear(year);
-                this.renderCalendar();
-                this.updateSelectedDatetime();
+
+                // Sync dropdowns with the updated selectedDate
+                this.monthSelect.value = this.selectedDate.getMonth();
+                this.yearSelect.value = this.selectedDate.getFullYear();
+
+                this.renderCalendar(); // Re-render the calendar
+                this.updateSelectedDatetime(); // Update the datetime display
             }
         }
 
