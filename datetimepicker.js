@@ -64,11 +64,23 @@
 
         getControlsHTML() {
             return `
-                <div class="calendar-controls mb-3">
-                    <select id="monthSelect" class="form-select"></select>
-                    <select id="yearSelect" class="form-select"></select>
+        <div class="calendar-controls mb-3 d-flex align-items-center justify-content-between">
+            <div class="month-selector">
+                <div class="input-group">
+                    <button type="button" class="btn btn-primary m-0" id="prev-month" aria-label="Previous Month">
+                        <span>&lt;</span>
+                    </button>
+                    <select id="monthSelect" class="form-select pe-4" aria-label="Select Month"></select>
+                    <button type="button" class="btn btn-primary m-0" id="next-month" aria-label="Next Month">
+                        <span>&gt;</span>
+                    </button>
                 </div>
-            `;
+            </div>
+            <div class="year-selector">
+                <input type="number" id="yearSelect" class="form-control" aria-label="Select Year" />
+            </div>
+        </div>
+    `;
         }
 
         getCalendarHTML() {
@@ -146,6 +158,14 @@
 
             this.monthSelect.addEventListener('change', () => this.updateCalendarDate());
             this.yearSelect.addEventListener('change', () => this.updateCalendarDate());
+            this.yearSelect.addEventListener('input', (e) => this.handleYearInputChange(e)); // Handle year input changes
+
+            // Month navigation
+            const prevMonthButton = this.container.querySelector('#prev-month');
+            const nextMonthButton = this.container.querySelector('#next-month');
+
+            prevMonthButton.addEventListener('click', () => this.changeMonth(-1));
+            nextMonthButton.addEventListener('click', () => this.changeMonth(1));
 
             [this.hoursSlider, this.minutesSlider, this.secondsSlider, this.nanosecondsSlider].forEach((slider) =>
                 slider.addEventListener('input', () => this.updateSelectedDatetime())
@@ -156,6 +176,22 @@
 
             this.calendar.addEventListener('click', (e) => this.handleDateSelection(e));
             this.doyToggle.addEventListener('change', () => this.renderCalendar());
+        }
+
+        changeMonth(delta) {
+            const currentMonth = this.selectedDate.getMonth();
+            this.selectedDate.setMonth(currentMonth + delta);
+            this.renderCalendar();
+            this.updateSelectedDatetime();
+        }
+
+        handleYearInputChange(event) {
+            const year = parseInt(event.target.value, 10);
+            if (!isNaN(year)) {
+                this.selectedDate.setFullYear(year);
+                this.renderCalendar();
+                this.updateSelectedDatetime();
+            }
         }
 
         togglePicker(event) {
@@ -180,15 +216,11 @@
             this.monthSelect.innerHTML = months
                 .map((month, index) => `<option value="${index}">${month}</option>`)
                 .join('');
-            this.monthSelect.value = this.today.getMonth();
+            this.monthSelect.value = this.selectedDate.getMonth(); // Set the selected month
         }
 
         populateYearDropdown() {
-            const yearRange = Array.from({ length: 101 }, (_, i) => this.today.getFullYear() - 50 + i);
-            this.yearSelect.innerHTML = yearRange
-                .map((year) => `<option value="${year}">${year}</option>`)
-                .join('');
-            this.yearSelect.value = this.today.getFullYear();
+            this.yearSelect.value = this.selectedDate.getFullYear(); // Set the selected year
         }
 
         getMonthNames() {
