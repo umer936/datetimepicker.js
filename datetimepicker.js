@@ -124,11 +124,14 @@
 
         getFooterHTML() {
             return `
-                <div>
-                    <label>Selected Date and Time:</label>
-                    <div id="selected-datetime" aria-live="polite"></div>
-                </div>
-            `;
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <label>Selected Date and Time:</label>
+                <div id="selected-datetime" aria-live="polite"></div>
+            </div>
+            <button type="button" class="btn btn-secondary" id="now-button" aria-label="Set to Now">Now</button>
+        </div>
+    `;
         }
 
         cacheElements(container) {
@@ -176,6 +179,16 @@
 
             this.calendar.addEventListener('click', (e) => this.handleDateSelection(e));
             this.doyToggle.addEventListener('change', () => this.renderCalendar());
+
+            // Add event listener for "Now" button
+            const nowButton = this.container.querySelector('#now-button');
+            nowButton.addEventListener('click', () => this.setToNow());
+        }
+
+        setToNow() {
+            this.selectedDate = new Date(); // Set to current date and time
+            this.renderCalendar(); // Re-render the calendar with the new date
+            this.updateSelectedDatetime(); // Update the selected date and time in the UI
         }
 
         changeMonth(delta) {
