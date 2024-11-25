@@ -9,6 +9,7 @@
         useBootstrap: false, // Option to use Bootstrap 5 styling
         onDateSelect: null, // Callback for when a date is selected
         onTimeChange: null, // Callback for when time changes
+        setNowIncludesTime: false, // Whether "Now" updates the time
     };
 
     class DateTimePicker {
@@ -186,9 +187,31 @@
         }
 
         setToNow() {
-            this.selectedDate = new Date(); // Set to current date and time
+            const now = new Date(); // Get the current date and time
+
+            // Update the date
+            this.selectedDate.setFullYear(now.getFullYear(), now.getMonth(), now.getDate());
+
+            // Conditionally update the time sliders based on the global setting
+            if (this.settings.setNowIncludesTime) {
+                this.selectedDate.setHours(now.getHours());
+                this.selectedDate.setMinutes(now.getMinutes());
+                this.selectedDate.setSeconds(now.getSeconds());
+                this.selectedDate.setMilliseconds(now.getMilliseconds());
+
+                // Update the sliders to match the time
+                this.hoursSlider.value = now.getHours();
+                this.minutesSlider.value = now.getMinutes();
+                this.secondsSlider.value = now.getSeconds();
+                this.nanosecondsSlider.value = now.getMilliseconds() * 1e6; // Convert ms to nanoseconds
+            }
+
+            // Update dropdowns for month and year
+            this.monthSelect.value = now.getMonth();
+            this.yearSelect.value = now.getFullYear();
+
             this.renderCalendar(); // Re-render the calendar with the new date
-            this.updateSelectedDatetime(); // Update the selected date and time in the UI
+            this.updateSelectedDatetime(); // Update the displayed date and time
         }
 
         changeMonth(delta) {
