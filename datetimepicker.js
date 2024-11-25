@@ -17,7 +17,6 @@
         constructor(element, options) {
             this.settings = { ...defaultSettings, ...options };
             this.selectedDate = new Date();
-            this.today = new Date();
             this.container = null;
             this.init(element);
         }
@@ -30,6 +29,10 @@
 
             if (this.settings.mode !== 'inline') {
                 this.datetimePicker.style.display = 'none';
+            }
+            if (this.settings.mode === 'inline') {
+                this.datetimePicker.style.display = 'block'; // Always visible for inline
+                this.datetimePicker.style.position = 'static'; // Embedded within the parent container
             }
 
             this.toggleFeatures();
@@ -264,8 +267,41 @@
 
         togglePicker(event) {
             event.stopPropagation();
+
+            if (this.settings.mode === 'inline') {
+                return; // Inline mode does not toggle visibility
+            }
+
             const isVisible = this.datetimePicker.style.display === 'block';
-            this.datetimePicker.style.display = isVisible ? 'none' : 'block';
+            if (!isVisible) {
+                this.positionPicker(event.target); // Dynamically position the picker
+                this.datetimePicker.style.display = 'block';
+                this.datetimePicker.setAttribute('aria-hidden', 'false'); // For accessibility
+            } else {
+                this.datetimePicker.style.display = 'none';
+                this.datetimePicker.setAttribute('aria-hidden', 'true');
+            }
+        }
+
+        positionPicker(trigger) {
+            // Ensure the trigger's parent container is positioned relatively
+            const parent = trigger.offsetParent;
+            if (!parent.style.position || parent.style.position === 'static') {
+                parent.style.position = 'relative';
+            }
+
+            // Calculate the position relative to the trigger element
+            const rect = trigger.getBoundingClientRect();
+
+            // Get offsets relative to the parent container
+            const offsetTop = trigger.offsetTop + trigger.offsetHeight + 4; // Below the trigger with a gap
+            const offsetLeft = trigger.offsetLeft;
+
+            // Apply the calculated position
+            this.datetimePicker.style.position = 'absolute';
+            this.datetimePicker.style.top = `${offsetTop}px`;
+            this.datetimePicker.style.left = `${offsetLeft}px`;
+            this.datetimePicker.style.zIndex = '1000'; // Ensure it appears above other elements
         }
 
         closePicker(event) {
