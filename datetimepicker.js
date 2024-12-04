@@ -301,6 +301,12 @@ class DateTimePicker {
         this.doyToggle.addEventListener('change', () => this.renderCalendar());
 
         this.calendar.addEventListener('click', (e) => this.handleDateSelection(e));
+        this.calendar.addEventListener('keydown', (e) => {
+            // Check if the pressed key is either spacebar or enter
+            if (e.key === ' ' || e.key === 'Enter') {
+                this.handleDateSelection(e);
+            }
+        });
         this.doyToggle.addEventListener('change', () => this.renderCalendar());
 
         // Add event listener for "Now" button
@@ -445,7 +451,7 @@ class DateTimePicker {
     createDayCell(date, day) {
         const cell = document.createElement('div');
         cell.classList.add('day-cell');
-
+        cell.tabIndex = 0;
 
         // Use regular day
         cell.textContent = this.doyToggle.checked
