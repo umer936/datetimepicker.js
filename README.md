@@ -26,7 +26,8 @@ To use this library, you can either include it via a `<script>` tag or bundle it
 
 1. **Include via CDN (for quick use)**:
 
-   Add the following to your HTML `<head>`:
+   ##### TODO: I don't have a CDN yet
+    Add the following to your HTML `<head>`:
 
    ```html
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg==" crossorigin="anonymous" referrerpolicy="no-referrer" /><!-- Optional-->
@@ -48,7 +49,7 @@ This mode shows the picker inline on the page.
 <div id="inline-picker"></div>
 
 <script>
-  DateTimePicker.init(document.getElementById('inline-picker'), {
+  new DateTimePicker(document.getElementById('inline-picker'), {
     mode: 'inline',
     useBootstrap: true,  // Use Bootstrap 5 styles
     showCalendar: true,  // Show calendar
@@ -66,7 +67,7 @@ This mode shows the picker when you click on the input field.
 <input type="text" id="input-picker" class="form-control" readonly>
 
 <script>
-  DateTimePicker.init(document.getElementById('input-picker'), {
+  new DateTimePicker(document.getElementById('input-picker'), {
     mode: 'input',
     useBootstrap: true
   });
@@ -80,7 +81,7 @@ This mode shows the picker when you click a button.
 <button id="button-picker" class="btn btn-primary">Pick Date and Time</button>
 
 <script>
-  DateTimePicker.init(document.getElementById('button-picker'), {
+  new DateTimePicker(document.getElementById('button-picker'), {
     mode: 'button',
     useBootstrap: true
   });
@@ -140,7 +141,46 @@ You can customize the appearance and behavior of the DateTimePicker by modifying
 
 We welcome contributions to improve this library! Please feel free to fork the repository and submit pull requests.
 
+## Potential Improvements
+
+- Localization
+  - More localization options 
+    - month names short/long/etc.
+    - `YYYY-MM-DD`, `DD/MM/YYYY`, etc.
+    - Week start day
+  - AM/PM vs 24-hr
+  - Localize all the text
+- Theming options outside of none and Bootstrap (e.g. Tailwind?)
+- Improve error handling
+- TypeScript support
+- Custom markers, e.g. 
+  ```js
+    markers: [
+      { date: '2023-12-25', tooltip: 'Christmas Day' },
+      { date: '2024-01-01', tooltip: 'New Year\'s Day' }
+    ]
+  ```
+- Lockout days, like having valid date/time ranges
+- Range-picker: Either
+  - 2 pickers where picking one sets the lockout for the other
+  - or 1 picker where you can select a date range
+    - callbacks for onRangeStart/onRangeEnd
+- Improve usage in just DatePicker cases 
+- Improve keyboard navigation
+  - Have Calendar movable by arrow keys rather than tab
+- Validation and/or error feedback
+- Mobile friendliness
+- Animations
+- Slider improvements 
+  - Should they go above the sliders?
+  - Can they be inlined to save space?
+- Add to CDN
+  - cdnjs, jsdeliver, etc.
+- Minify and host a `/dist` folder
+
 ### Bugs and Issues
+
+- Nanoseconds doesn't change using arrow-keys... Maybe because too high resolution?
 
 If you encounter any issues, please report them via GitHub Issues.
 
