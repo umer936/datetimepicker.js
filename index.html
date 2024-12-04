@@ -42,6 +42,7 @@
         new DateTimePicker(document.getElementById('input-picker'), {
             mode: 'input',
             showDOYtoggle: true,
+            initialValue: '2001 01 Jan 08:00:00',
             slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
             onDateSelect: (time) => document.getElementById('input-picker').value = time.toLocaleString(),
             onTimeChange: (time) => document.getElementById('input-picker').value = time.toLocaleString(),
