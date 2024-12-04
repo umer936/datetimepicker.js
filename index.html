@@ -14,31 +14,43 @@
 <body>
 <h1>DateTimePicker Examples</h1>
 
-<h2>Inline Picker</h2>
-<div id="inline-picker" class="mb-4"></div>
+<div class="mb-4">
+    <h2>Inline Picker</h2>
+    <div id="inline-picker" class=></div>
+</div>
 
-<h2>Input-Based Picker</h2>
-<div id="input-picker" class="mb-4"></div>
+<div class="mb-4">
+    <h2>Input-Based Picker</h2>
+    <label for="input-picker"></label>
+    <input id="input-picker" class="form-control datetime-input" placeholder="Select Date and Time" aria-label="Date Time Input">
+</div>
 
-<h2>Button-Based Picker</h2>
-<div id="button-picker" class="mb-4"></div>
+<div class="mb-4">
+    <h2>Button-Based Picker</h2>
+    <button id="button-picker" class="btn btn-primary" aria-label="Pick Date and Time">Pick Date and Time</button>
+</div>
 
 <script src="datetimepicker.js"></script>
 <script>
-    DateTimePicker.init(document.getElementById('inline-picker'), {
-        mode: 'inline',
-        showDOYtoggle: true,
-        slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
-    });
-    DateTimePicker.init(document.getElementById('input-picker'), {
-        mode: 'input',
-        showDOYtoggle: true,
-        slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
-    });
-    DateTimePicker.init(document.getElementById('button-picker'), {
-        mode: 'button',
-        showDOYtoggle: true,
-        slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
+    addEventListener("DOMContentLoaded", () => {
+        new DateTimePicker(document.getElementById('inline-picker'), {
+            mode: 'inline',
+            showDOYtoggle: true,
+            slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
+            showCloseButton: false,
+        });
+        new DateTimePicker(document.getElementById('input-picker'), {
+            mode: 'input',
+            showDOYtoggle: true,
+            slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
+            onDateSelect: (time) => document.getElementById('input-picker').value = time.toLocaleString(),
+            onTimeChange: (time) => document.getElementById('input-picker').value = time.toLocaleString(),
+        });
+        new DateTimePicker(document.getElementById('button-picker'), {
+            mode: 'button',
+            showDOYtoggle: true,
+            slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
+        });
     });
 </script>
 </body>
