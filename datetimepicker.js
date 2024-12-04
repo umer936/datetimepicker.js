@@ -119,7 +119,7 @@ class DateTimePicker {
 
 // Update the populateYearDropdown method to implement lazy loading with a 20-year range
     populateYearDropdown() {
-        const currentYear = new Date().getFullYear();
+        const currentYear = this.selectedDate.getFullYear();
         const range = 20; // Show 20 years at a time
 
         // Set the range around the current year
