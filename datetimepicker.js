@@ -346,6 +346,7 @@ class DateTimePicker {
         this.yearSelect.value = now.getFullYear();
 
         this.renderCalendar(); // Re-render the calendar with the new date
+        this.populateYearDropdown(); // Re-populate the year dropdown
         this.updateSelectedDatetime(); // Update the displayed date and time
     }
 
