@@ -460,15 +460,24 @@ class DateTimePicker {
         const cell = document.createElement('div');
         cell.classList.add('day-cell');
         cell.tabIndex = 0;
+        cell.setAttribute('role', 'gridcell'); // ARIA role for calendar cell
 
-        // Use regular day
+        const isSelected = this.isSameDate(date, this.selectedDate);
+
+        // Use regular day or Day of Year
         cell.textContent = this.doyToggle.checked
-            ? this.getDayOfYear(date) // Use DOY
+            ? this.getDayOfYear(date)
             : day;
+
+        // Store date for selection
         cell.dataset.date = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-        if (this.isSameDate(date, this.selectedDate)) {
+        // Mark selected date
+        if (isSelected) {
             cell.classList.add('selected');
+            cell.setAttribute('aria-selected', 'true'); // Accessibility
+        } else {
+            cell.setAttribute('aria-selected', 'false');
         }
 
         return cell;
