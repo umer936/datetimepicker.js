@@ -93,7 +93,7 @@ This mode shows the picker when you click a button.
 | Option           | Type      | Default Value | Description                                                  |
 |------------------|-----------|---------------|--------------------------------------------------------------|
 | `language`       | `string`  | `'en-US'`     | The language/locale to use for displaying the date.          |
-| `firstDayOfWeek` | `integer` | `0`           | Day of the Week to start, 0 is Sunday.                       |
+| `firstDayOfWeek` | `integer` | `0`           | Day of the Week to start, `0` is Sunday. Max `7`.            |
 | `showCalendar`   | `boolean` | `true`        | Whether to show the calendar interface.                      |
 | `showSliders`    | `boolean` | `true`        | Whether to show sliders for time selection.                  |
 | `showUTC`        | `boolean` | `true`        | Whether to show the UTC toggle.                              |
