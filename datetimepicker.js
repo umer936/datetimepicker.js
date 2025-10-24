@@ -1,6 +1,7 @@
 class DateTimePicker {
     static defaultSettings = {
         language: 'en-US',
+        firstDayOfWeek: 0,
         showCalendar: true,
         showDaysOfWeek: true,
         showSliders: true,
@@ -103,14 +104,17 @@ class DateTimePicker {
         // Get localized days of the week
         const formatter = new Intl.DateTimeFormat(this.settings.language, { weekday: 'short' });
         const daysOfWeek = Array.from({ length: 7 }, (_, i) =>
-            formatter.format(new Date(2023, 0, i + 1)) // Fixed week for consistency
+            formatter.format(new Date(2023, 0, i + 1))
         );
 
-        // Populate the div with the days of the week
-        for (const day of daysOfWeek) {
+        // Rotate daysOfWeek according to firstDayOfWeek
+        const first = this.settings.firstDayOfWeek;
+        const rotatedDays = [...daysOfWeek.slice(first), ...daysOfWeek.slice(0, first)];
+
+        for (const day of rotatedDays) {
             const dowCell = document.createElement('div');
             dowCell.textContent = day;
-            dowCell.classList.add('dow-cell'); // Optional styling class
+            dowCell.classList.add('dow-cell');
             dowDiv.appendChild(dowCell);
         }
 
@@ -439,14 +443,15 @@ class DateTimePicker {
         // Fragment is more performant than redrawing every cell
         const fragment = document.createDocumentFragment();
 
-        // Empty cells for alignment
-        for (let i = 0; i < firstDay; i++) {
+        // Adjust empty cells based on firstDayOfWeek
+        const emptyCells = (firstDay - this.settings.firstDayOfWeek + 7) % 7;
+        for (let i = 0; i < emptyCells; i++) {
             const emptyCell = document.createElement('div');
             emptyCell.setAttribute('role', 'presentation'); // ARIA for empty
             fragment.appendChild(emptyCell);
         }
 
-        // Day cells
+        // Add day cells
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
             const cell = this.createDayCell(date, day);

@@ -90,15 +90,16 @@ This mode shows the picker when you click a button.
 
 ## Options
 
-| Option          | Type      | Default Value | Description                                                  |
-|-----------------|-----------|---------------|--------------------------------------------------------------|
-| `language`      | `string`  | `'en-US'`     | The language/locale to use for displaying the date.          |
-| `showCalendar`  | `boolean` | `true`        | Whether to show the calendar interface.                      |
-| `showSliders`   | `boolean` | `true`        | Whether to show sliders for time selection.                  |
-| `showUTC`       | `boolean` | `true`        | Whether to show the UTC toggle.                              |
-| `showDOYtoggle` | `boolean` | `false`       | Whether to show the Day of Year toggle.                      |
-| `mode`          | `string`  | `'inline'`    | The picker mode. Options: `'inline'`, `'input'`, `'button'`. |
-| `useBootstrap`  | `boolean` | `false`       | Whether to use Bootstrap 5 styles for UI elements.           |
+| Option           | Type      | Default Value | Description                                                  |
+|------------------|-----------|---------------|--------------------------------------------------------------|
+| `language`       | `string`  | `'en-US'`     | The language/locale to use for displaying the date.          |
+| `firstDayOfWeek` | `integer` | `0`           | Day of the Week to start, 0 is Sunday.                       |
+| `showCalendar`   | `boolean` | `true`        | Whether to show the calendar interface.                      |
+| `showSliders`    | `boolean` | `true`        | Whether to show sliders for time selection.                  |
+| `showUTC`        | `boolean` | `true`        | Whether to show the UTC toggle.                              |
+| `showDOYtoggle`  | `boolean` | `false`       | Whether to show the Day of Year toggle.                      |
+| `mode`           | `string`  | `'inline'`    | The picker mode. Options: `'inline'`, `'input'`, `'button'`. |
+| `useBootstrap`   | `boolean` | `false`       | Whether to use Bootstrap 5 styles for UI elements.           |
 
 ## Example
 
@@ -136,6 +137,7 @@ You can customize the appearance and behavior of the DateTimePicker by modifying
 - **Time Sliders**: Allow users to pick hours, minutes, seconds, and nanoseconds.
 - **UTC Toggle**: Switch between UTC and local time.
 - **Day of Year (DOY)**: Optionally display the day of the year.
+- **Week start day**: Set start day of the week (Sunday, Monday, etc.).
 
 ## Contribution
 
