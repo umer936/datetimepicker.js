@@ -434,19 +434,26 @@ class DateTimePicker {
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        this.calendar.innerHTML = '';
+        this.calendar.innerHTML = ''; // Clear previous calendar
 
-        // Fill empty cells for alignment
+        // Fragment is more performant than redrawing every cell
+        const fragment = document.createDocumentFragment();
+
+        // Empty cells for alignment
         for (let i = 0; i < firstDay; i++) {
-            this.calendar.appendChild(document.createElement('div'));
+            const emptyCell = document.createElement('div');
+            emptyCell.setAttribute('role', 'presentation'); // ARIA for empty
+            fragment.appendChild(emptyCell);
         }
 
-        // Fill day cells
+        // Day cells
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
             const cell = this.createDayCell(date, day);
-            this.calendar.appendChild(cell);
+            fragment.appendChild(cell);
         }
+
+        this.calendar.appendChild(fragment); // Single DOM update
     }
 
     createDayCell(date, day) {
