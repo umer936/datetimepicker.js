@@ -4,7 +4,7 @@
   "description": "A simple datetime picker",
   "main": "src/datetimepicker.js",
   "scripts": {
-    "build": "mkdir -p dist && npx esbuild src/datetimepicker.js --minify --outfile=dist/datetimepicker.min.js && npx esbuild src/datetimepicker.css --minify --outfile=dist/datetimepicker.min.css"
+    "build": "mkdir -p dist && npx esbuild datetimepicker.js --minify --outfile=dist/datetimepicker.min.js && npx esbuild datetimepicker.css --minify --outfile=dist/datetimepicker.min.css"
   },
   "devDependencies": {
     "esbuild": "^0.19.0"

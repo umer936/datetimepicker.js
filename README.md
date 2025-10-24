@@ -179,7 +179,7 @@ We welcome contributions to improve this library! Please feel free to fork the r
 - Add to CDN
   - cdnjs, jsdeliver, etc.
 - ~~Minify and host a `/dist` folder~~
-  - Add a build step to automate the minification
+  - ~~Add a build step to automate the minification~~
 - Unit tests or any kind of testing
 
 ### Bugs and Issues
