@@ -3,56 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DateTimePicker with or without Bootstrap 5</title>
-<!--    <link rel="stylesheet"-->
-<!--          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/css/bootstrap.min.css"-->
-<!--          integrity="sha512-2bBQCjcnw658Lho4nlXJcc6WkV/UxpE/sAokbXPxQNGqmNdQrWqtw26Ns9kFF/yG792pKR1Sx8/Y1Lf1XN4GKA=="-->
-<!--          crossorigin="anonymous"-->
-<!--          referrerpolicy="no-referrer"/>-->
+    <title>DateTimePicker Playground</title>
+
+    <!-- Optional Bootstrap -->
+    <link id="bootstrap-css" rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/css/bootstrap.min.css"
+          crossorigin="anonymous" disabled>
     <link rel="stylesheet" href="datetimepicker.css">
+
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 2rem;
+            max-width: 1400px;
+        }
+
+        h1 {
+            margin-bottom: 1.5rem;
+        }
+
+        details {
+            margin-bottom: 2rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 1rem;
+            background: #fafafa;
+        }
+
+        summary {
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .picker-row {
+            display: grid;
+            grid-template-columns: 1fr 320px; /* left: picker | right: options */
+            gap: 1.5rem;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .picker-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .picker-box {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 1rem;
+            min-height: 320px;
+            background: white;
+        }
+
+        fieldset {
+            border: none;
+            background: #fff;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        fieldset label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0.3rem 0;
+        }
+
+        fieldset input, fieldset select {
+            margin-left: 0.5rem;
+            flex: 1;
+        }
+
+        .switch {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            cursor: pointer;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+
+        .switch input {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        fieldset > label > input {
+            flex: 0;
+        }
+    </style>
 </head>
 <body>
-<h1>DateTimePicker Examples</h1>
 
-<div class="mb-4">
-    <h2>Inline Picker</h2>
-    <div id="inline-picker" class=></div>
-</div>
+<h1>DateTimePicker Interactive Playground</h1>
+<label class="switch">
+    <input type="checkbox" id="toggle-bootstrap">
+    Use Bootstrap Styles
+</label>
 
-<div class="mb-4">
-    <h2>Input-Based Picker</h2>
-    <label for="input-picker"></label>
-    <input id="input-picker" class="form-control datetime-input" placeholder="Select Date and Time" aria-label="Date Time Input">
-</div>
+<!-- Inline Picker -->
+<details open>
+    <summary>Inline Picker</summary>
+    <div class="picker-row">
+        <div class="picker-box" id="inline-wrapper"></div>
+        <fieldset id="inline-options"></fieldset>
+    </div>
+</details>
 
-<div class="mb-4">
-    <h2>Button-Based Picker</h2>
-    <button id="button-picker" class="btn btn-primary" aria-label="Pick Date and Time">Pick Date and Time</button>
-</div>
+<!-- Input Picker -->
+<details>
+    <summary>Input Picker</summary>
+    <div class="picker-row">
+        <div class="picker-box" id="input-wrapper"></div>
+        <fieldset id="input-options"></fieldset>
+    </div>
+</details>
+
+<!-- Button Picker -->
+<details>
+    <summary>Button Picker</summary>
+    <div class="picker-row">
+        <div class="picker-box" id="button-wrapper"></div>
+        <fieldset id="button-options"></fieldset>
+    </div>
+</details>
 
 <script src="datetimepicker.js"></script>
-<script>
-    addEventListener("DOMContentLoaded", () => {
-        new DateTimePicker(document.getElementById('inline-picker'), {
-            mode: 'inline',
-            showDOYtoggle: true,
-            slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
-            showCloseButton: false,
-        });
-        new DateTimePicker(document.getElementById('input-picker'), {
-            mode: 'input',
-            showDOYtoggle: true,
-            initialValue: '2001 01 Jan 08:00:00',
-            slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
-            onDateSelect: (time) => document.getElementById('input-picker').value = time.toLocaleString(),
-            onTimeChange: (time) => document.getElementById('input-picker').value = time.toLocaleString(),
-        });
-        new DateTimePicker(document.getElementById('button-picker'), {
-            mode: 'button',
-            showDOYtoggle: true,
-            slidersToShow: ['hours', 'minutes', 'seconds', 'nanoseconds'],
-        });
-    });
-</script>
+<script src="playground.js"></script>
 </body>
 </html>
