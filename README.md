@@ -4,6 +4,8 @@ A flexible and customizable JavaScript DateTime picker that supports inline, inp
 
 (I ChatGPT-ed my way through making this library, so improvements are welcome - umer936)
 
+**TRY ME: https://umer936.github.io/datetimepicker.js/**
+
 ## Features
 
 - **Inline, input, or button-based modes** to suit your needs.
