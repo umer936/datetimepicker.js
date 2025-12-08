@@ -26,9 +26,15 @@ This DateTimePicker library is inspired by many JS libraries that have come befo
 
 To use this library, you can either include it via a `<script>` tag or bundle it with your JavaScript project. 
 
-1. **Include via CDN (for quick use)**:
+1. **Include via CDN**:
 
-   ##### TODO: I don't have a CDN yet
+    ```html
+    <!-- JS -->
+    <script src="https://cdn.jsdelivr.net/gh/umer936/datetimepicker.js@main/dist/datetimepicker.min.js"></script>
+    <!-- CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/umer936/datetimepicker.js@main/dist/datetimepicker.min.css">
+    ```
+
     Add the following to your HTML `<head>`:
 
    ```html
