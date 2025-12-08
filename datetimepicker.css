@@ -47,8 +47,7 @@
 
 .calendar-controls select,
 .day-cell,
-button,
-input[type="text"] {
+.datetime-container input[type="text"] {
     font-size: 0.875rem;
     padding: 0.2rem;
     border: 1px solid #ccc;
@@ -92,7 +91,7 @@ input[type="text"] {
 }
 
 /* Sliders */
-input[type="range"] {
+.datetime-container input[type="range"] {
     width: 100%;
     appearance: none;
     background-color: #ddd;
