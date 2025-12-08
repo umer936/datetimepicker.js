@@ -407,10 +407,6 @@ class DateTimePicker {
         if (!parent.style.position || parent.style.position === 'static') {
             parent.style.position = 'relative';
         }
-
-        // Apply the calculated position
-        this.datetimePicker.style.position = 'absolute';
-        this.datetimePicker.style.zIndex = '1000'; // Ensure it appears above other elements
     }
 
     populateDropdowns() {
