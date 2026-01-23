@@ -187,17 +187,40 @@ class DateTimePicker {
             : '';
     }
 
+    // Helper to get localized slider labels using Intl.NumberFormat
+    getSliderLabel(type) {
+        const locale = this.settings.language;
+        let label;
+        switch (type) {
+            case 'hours':
+                label = new Intl.NumberFormat(locale, { style: 'unit', unit: 'hour', unitDisplay: 'long' }).format(1);
+                return label.replace(/\d+/g, '').trim();
+            case 'minutes':
+                label = new Intl.NumberFormat(locale, { style: 'unit', unit: 'minute', unitDisplay: 'long' }).format(1);
+                return label.replace(/\d+/g, '').trim();
+            case 'seconds':
+                label = new Intl.NumberFormat(locale, { style: 'unit', unit: 'second', unitDisplay: 'long' }).format(1);
+                return label.replace(/\d+/g, '').trim();
+            case 'nanoseconds':
+                // Use the seconds label and prepend 'nano'
+                const secondsLabel = new Intl.NumberFormat(locale, { style: 'unit', unit: 'second', unitDisplay: 'long' }).format(1);
+                return 'nano' + secondsLabel.replace(/\d+/g, '').trim();
+            default:
+                return type;
+        }
+    }
+
     getSlidersHTML() {
         const sliders = this.settings.slidersToShow.map(slider => {
             switch (slider) {
                 case 'hours':
-                    return this.getSliderHTML('hours', 'Hours', 0, 23);
+                    return this.getSliderHTML('hours', this.getSliderLabel('hours'), 0, 23);
                 case 'minutes':
-                    return this.getSliderHTML('minutes', 'Minutes', 0, 59);
+                    return this.getSliderHTML('minutes', this.getSliderLabel('minutes'), 0, 59);
                 case 'seconds':
-                    return this.getSliderHTML('seconds', 'Seconds', 0, 59);
+                    return this.getSliderHTML('seconds', this.getSliderLabel('seconds'), 0, 59);
                 case 'nanoseconds':
-                    return this.getSliderHTML('nanoseconds', 'Nanoseconds', 0, 999999999);
+                    return this.getSliderHTML('nanoseconds', this.getSliderLabel('nanoseconds'), 0, 999999999);
                 default:
                     return '';
             }
