@@ -107,3 +107,40 @@
         font-size: 0.75rem;
     }
 }
+
+/* Dark mode support for Bootstrap 5.3 color modes */
+body[data-bs-theme="dark"] .datetime-picker,
+body[data-bs-theme="dark"] .picker-box,
+body[data-bs-theme="dark"] .calendar-controls select,
+body[data-bs-theme="dark"] .day-cell,
+body[data-bs-theme="dark"] .datetime-container input[type="text"] {
+    background-color: #222 !important;
+    color: #f1f1f1 !important;
+    border-color: #444 !important;
+}
+
+body[data-bs-theme="dark"] .calendar-controls select {
+    background-color: #222 !important;
+    color: #f1f1f1 !important;
+    border-color: #444 !important;
+}
+
+body[data-bs-theme="dark"] .day-cell {
+    background-color: #333 !important;
+    color: #f1f1f1 !important;
+    border-color: #444 !important;
+}
+
+body[data-bs-theme="dark"] .day-cell:hover {
+    background-color: #444 !important;
+    color: #fff !important;
+}
+
+body[data-bs-theme="dark"] .day-cell.selected {
+    background-color: #0d6efd !important;
+    color: #fff !important;
+}
+
+body[data-bs-theme="dark"] #days-of-week .dow-cell {
+    color: #f1f1f1 !important;
+}

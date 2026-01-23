@@ -59,8 +59,13 @@ class DateTimePicker {
         container.classList.add('datetime-container');
         container.style.display = 'none';
 
+        // Use Bootstrap classes if enabled
+        const pickerClass = this.settings.useBootstrap
+            ? 'datetime-picker border rounded shadow p-3 bg-body'
+            : 'datetime-picker border rounded shadow p-3 bg-white';
+
         container.innerHTML = `
-        <div class="datetime-picker border rounded shadow p-3 bg-white" role="dialog" aria-hidden="true">
+        <div class="${pickerClass}" role="dialog" aria-hidden="true">
             ${this.getControlsHTML()}
             ${this.getDOWHTML()}
             ${this.getCalendarHTML()}
@@ -81,16 +86,19 @@ class DateTimePicker {
     }
 
     getControlsHTML() {
+        // Use Bootstrap classes for buttons/selects if enabled
+        const btnClass = this.settings.useBootstrap ? 'btn btn-primary' : 'btn';
+        const selectClass = this.settings.useBootstrap ? 'form-select pe-4' : '';
         return `
     <div class="calendar-controls mb-3 d-flex align-items-center justify-content-between">
-        <button type="button" class="btn btn-primary me-2" id="prev-month" aria-label="Previous Month">
+        <button type="button" class="${btnClass} me-2" id="prev-month" aria-label="Previous Month">
             <span>&lt;</span>
         </button>
         <div class="input-group">
-            <select id="monthSelect" class="form-select pe-4" aria-label="Select Month"></select>
-            <select id="yearSelect" class="form-select" aria-label="Select Year"></select>
+            <select id="monthSelect" class="${selectClass}" aria-label="Select Month"></select>
+            <select id="yearSelect" class="${selectClass}" aria-label="Select Year"></select>
         </div>
-        <button type="button" class="btn btn-primary ms-2" id="next-month" aria-label="Next Month">
+        <button type="button" class="${btnClass} ms-2" id="next-month" aria-label="Next Month">
             <span>&gt;</span>
         </button>
     </div>
@@ -115,6 +123,9 @@ class DateTimePicker {
             const dowCell = document.createElement('div');
             dowCell.textContent = day;
             dowCell.classList.add('dow-cell');
+            if (this.settings.useBootstrap) {
+                dowCell.classList.add('fw-bold');
+            }
             dowDiv.appendChild(dowCell);
         }
 
@@ -211,6 +222,7 @@ class DateTimePicker {
     }
 
     getSlidersHTML() {
+        const sliderContainerClass = this.settings.useBootstrap ? 'slider-container mb-3' : 'slider-container';
         const sliders = this.settings.slidersToShow.map(slider => {
             switch (slider) {
                 case 'hours':
@@ -226,28 +238,35 @@ class DateTimePicker {
             }
         }).join('');
 
-        return `<div class="slider-container mb-3">${sliders}</div>`;
+        return `<div class="${sliderContainerClass}">${sliders}</div>`;
     }
 
     getSliderHTML(id, label, min, max) {
+        // Use Bootstrap classes for slider and label if enabled
+        const labelClass = this.settings.useBootstrap ? 'form-label me-2' : '';
+        const inputClass = this.settings.useBootstrap ? 'form-range w-50 ms-auto' : '';
         return `
                 <div class="d-flex flex-row align-items-center">
-                        <label for="${id}" class="form-label me-2">${label}:</label>
-                        <input type="range" id="${id}" value="0" min="${min}" max="${max}" step="1" class="form-range w-50 ms-auto" aria-label="${label}">
+                        <label for="${id}" class="${labelClass}">${label}:</label>
+                        <input type="range" id="${id}" value="0" min="${min}" max="${max}" step="1" class="${inputClass}" aria-label="${label}">
                 </div>
             `;
     }
 
     getTogglesHTML() {
+        // Use Bootstrap classes for toggles if enabled
+        const formCheckClass = this.settings.useBootstrap ? 'form-check form-switch' : '';
+        const inputClass = this.settings.useBootstrap ? 'form-check-input' : '';
+        const labelClass = this.settings.useBootstrap ? 'form-check-label' : '';
         return `
                 <div class="toggle-container justify-content-between w-100">
-                    <div class="form-check form-switch">
-                        <input type="checkbox" id="utc-toggle" class="form-check-input" aria-label="Toggle UTC Time">
-                        <label for="utc-toggle" class="form-check-label">Local/UTC</label>
+                    <div class="${formCheckClass}">
+                        <input type="checkbox" id="utc-toggle" class="${inputClass}" aria-label="Toggle UTC Time">
+                        <label for="utc-toggle" class="${labelClass}">Local/UTC</label>
                     </div>
-                    <div class="form-check form-switch mb-3">
-                        <input type="checkbox" id="doy-toggle" class="form-check-input" aria-label="Toggle Day of Year">
-                        <label for="doy-toggle" class="form-check-label">Day of Month/Day of Year</label>
+                    <div class="${formCheckClass} mb-3">
+                        <input type="checkbox" id="doy-toggle" class="${inputClass}" aria-label="Toggle Day of Year">
+                        <label for="doy-toggle" class="${labelClass}">Day of Month/Day of Year</label>
                     </div>
                 </div>
             `;
@@ -255,17 +274,17 @@ class DateTimePicker {
 
     getFooterHTML() {
         if (!this.settings.showFooter) {
-            return ''; // Return nothing if footer is disabled
+            return '';
         }
-
+        // Use Bootstrap classes for buttons if enabled
+        const nowBtnClass = this.settings.useBootstrap ? 'btn btn-secondary' : 'btn';
+        const closeBtnClass = this.settings.useBootstrap ? 'btn btn-primary' : 'btn';
         const nowButtonHTML = this.settings.showNowButton
-            ? `<button type="button" class="btn btn-secondary" id="now-button" aria-label="Set to Now">Now</button>`
+            ? `<button type="button" class="${nowBtnClass}" id="now-button" aria-label="Set to Now">Now</button>`
             : '';
-
         const closeButtonHTML = this.settings.showCloseButton
-            ? `<button type="button" class="btn btn-primary" id="close-button" aria-label="Close">Close</button>`
+            ? `<button type="button" class="${closeBtnClass}" id="close-button" aria-label="Close">Close</button>`
             : '';
-
         return `
         <div class="d-flex justify-content-between align-items-center">
             ${nowButtonHTML}
@@ -486,6 +505,10 @@ class DateTimePicker {
         cell.tabIndex = 0;
         cell.setAttribute('role', 'gridcell'); // ARIA role for calendar cell
 
+        if (this.settings.useBootstrap) {
+            cell.classList.add('btn', 'btn-outline-secondary', 'p-1', 'm-1');
+        }
+
         const isSelected = this.isSameDate(date, this.selectedDate);
 
         // Use regular day or Day of Year
@@ -499,6 +522,9 @@ class DateTimePicker {
         // Mark selected date
         if (isSelected) {
             cell.classList.add('selected');
+            if (this.settings.useBootstrap) {
+                cell.classList.add('btn-primary');
+            }
             cell.setAttribute('aria-selected', 'true'); // Accessibility
         } else {
             cell.setAttribute('aria-selected', 'false');

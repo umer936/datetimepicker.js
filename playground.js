@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const pickers = { inline: null, input: null, button: null };
     const bootstrapToggle = document.getElementById('toggle-bootstrap');
+    const darkToggle = document.getElementById('toggle-dark');
+    const darkToggleContainer = document.getElementById('dark-toggle-container');
 
     const optionTemplate = [
         ['language', 'text', 'en-US'],
@@ -36,7 +38,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     bootstrapToggle.addEventListener('change', () => {
         document.getElementById('bootstrap-css').disabled = !bootstrapToggle.checked;
+        darkToggleContainer.style.display = bootstrapToggle.checked ? '' : 'none';
+        // Reset dark mode if Bootstrap is disabled
+        if (!bootstrapToggle.checked) {
+            document.body.setAttribute('data-bs-theme', 'light');
+            darkToggle.checked = false;
+        }
         refreshAll();
+    });
+
+    darkToggle.addEventListener('change', () => {
+        document.body.setAttribute('data-bs-theme', darkToggle.checked ? 'dark' : 'light');
     });
 
     function getOptions(id) {
@@ -92,6 +104,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         el.id = `${id}-picker`;
         wrap.appendChild(el);
+
+        // Apply Bootstrap classes to picker containers if enabled
+        if (bootstrapToggle.checked) {
+            wrap.classList.add('bg-body', 'rounded', 'shadow', 'p-3', 'mb-3');
+        } else {
+            wrap.classList.remove('bg-body', 'rounded', 'shadow', 'p-3', 'mb-3');
+        }
         return el;
     }
 
