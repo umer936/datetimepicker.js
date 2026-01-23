@@ -4,6 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const darkToggle = document.getElementById('toggle-dark');
     const darkToggleContainer = document.getElementById('dark-toggle-container');
 
+    // Set Bootstrap Styles unchecked by default
+    bootstrapToggle.checked = false;
+    document.getElementById('bootstrap-css').disabled = true;
+    darkToggleContainer.style.display = 'none';
+    document.body.setAttribute('data-bs-theme', 'light');
+    darkToggle.checked = false;
+
     const optionTemplate = [
         ['language', 'text', 'en-US'],
         ['firstDayOfWeek', 'number', 0],
@@ -24,16 +31,104 @@ document.addEventListener('DOMContentLoaded', () => {
     for (const id of ['inline', 'input', 'button']) {
         const fs = document.getElementById(`${id}-options`);
         optionTemplate.forEach(([name, type, def]) => {
+            // Create a flex row for label and input
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.justifyContent = 'space-between';
+            row.style.marginBottom = '0.5rem';
+
             const lbl = document.createElement('label');
             lbl.textContent = name;
+            lbl.setAttribute('for', `${id}-${name}`);
+            lbl.style.margin = '0';
+            lbl.style.flex = '1 1 auto';
+            lbl.style.textAlign = 'left';
+
             const input = document.createElement('input');
             input.type = type;
             input.id = `${id}-${name}`;
             if (type === 'checkbox') input.checked = def;
             else input.value = def;
-            lbl.appendChild(input);
-            fs.appendChild(lbl);
+            input.style.marginLeft = '0.5rem';
+
+            // Remove all sizing for checkboxes, let browser/Bootstrap handle it
+            if (type === 'checkbox') {
+                input.style.width = '';
+                input.style.height = '';
+                input.style.minWidth = '';
+                input.style.minHeight = '';
+                input.style.maxWidth = '';
+                input.style.maxHeight = '';
+            } else {
+                input.style.width = 'auto';
+                input.style.maxWidth = '180px';
+            }
+
+            row.appendChild(lbl);
+            row.appendChild(input);
+            fs.appendChild(row);
         });
+    }
+
+    // Helper to update playground form controls with Bootstrap classes
+    function updatePlaygroundFormStyles(useBootstrap) {
+        for (const id of ['inline', 'input', 'button']) {
+            const fs = document.getElementById(`${id}-options`);
+            fs.querySelectorAll('div').forEach(row => {
+                row.style.display = 'flex';
+                row.style.flexDirection = 'row';
+                row.style.alignItems = 'center';
+                row.style.justifyContent = 'space-between';
+                row.style.marginBottom = '0.5rem';
+            });
+            fs.querySelectorAll('label').forEach(lbl => {
+                if (useBootstrap) {
+                    lbl.classList.add('form-label', 'mb-0');
+                } else {
+                    lbl.classList.remove('form-label', 'mb-0');
+                }
+                lbl.style.margin = '0';
+                lbl.style.flex = '1 1 auto';
+                lbl.style.textAlign = 'left';
+            });
+            fs.querySelectorAll('input[type="text"], input[type="number"]').forEach(inp => {
+                if (useBootstrap) {
+                    inp.classList.add('form-control');
+                    inp.style.width = 'auto';
+                    inp.style.maxWidth = '180px';
+                } else {
+                    inp.classList.remove('form-control');
+                    inp.style.width = 'auto';
+                    inp.style.maxWidth = '180px';
+                }
+            });
+            fs.querySelectorAll('input[type="checkbox"]').forEach(inp => {
+                if (useBootstrap) {
+                    inp.classList.add('form-check-input');
+                } else {
+                    inp.classList.remove('form-check-input');
+                }
+                // Always remove all sizing for checkboxes
+                inp.style.width = '';
+                inp.style.height = '';
+                inp.style.minWidth = '';
+                inp.style.minHeight = '';
+                inp.style.maxWidth = '';
+                inp.style.maxHeight = '';
+            });
+            fs.querySelectorAll('select').forEach(sel => {
+                if (useBootstrap) {
+                    sel.classList.add('form-select');
+                    sel.style.width = 'auto';
+                    sel.style.maxWidth = '180px';
+                } else {
+                    sel.classList.remove('form-select');
+                    sel.style.width = 'auto';
+                    sel.style.maxWidth = '180px';
+                }
+            });
+        }
     }
 
     bootstrapToggle.addEventListener('change', () => {
@@ -44,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.setAttribute('data-bs-theme', 'light');
             darkToggle.checked = false;
         }
+        updatePlaygroundFormStyles(bootstrapToggle.checked);
         refreshAll();
     });
 
@@ -136,4 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
         attachOptionListeners(id);
         initPicker(id);
     });
+
+    // Initial style setup
+    updatePlaygroundFormStyles(bootstrapToggle.checked);
 });

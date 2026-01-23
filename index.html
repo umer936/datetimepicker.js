@@ -28,6 +28,7 @@
             border-radius: 8px;
             padding: 1rem;
             background: #fafafa;
+            transition: background 0.2s, border-color 0.2s;
         }
 
         summary {
@@ -57,6 +58,7 @@
             padding: 1rem;
             min-height: 320px;
             background: white;
+            transition: background 0.2s, border-color 0.2s;
         }
 
         fieldset {
@@ -95,6 +97,22 @@
 
         fieldset > label > input {
             flex: 0;
+        }
+
+        /* Dark mode for details and picker-box */
+        body[data-bs-theme="dark"] details {
+            background: #23272b;
+            border-color: #444;
+            color: #f1f1f1;
+        }
+        body[data-bs-theme="dark"] .picker-box {
+            background: #23272b;
+            border-color: #444;
+            color: #f1f1f1;
+        }
+        body[data-bs-theme="dark"] fieldset {
+            background: #23272b;
+            color: #f1f1f1;
         }
     </style>
 </head>
