@@ -134,55 +134,57 @@ class DateTimePicker {
 
 // Update the populateYearDropdown method to implement lazy loading with a 20-year range
     populateYearDropdown() {
-        const currentYear = this.selectedDate.getFullYear();
-        const range = 20; // Show 20 years at a time
+        // Set up initial range if not already set
+        if (typeof this._yearRangeStart !== 'number' || typeof this._yearRangeEnd !== 'number') {
+            const currentYear = this.selectedDate.getFullYear();
+            const range = 20;
+            this._yearRangeStart = currentYear - Math.floor(range / 2);
+            this._yearRangeEnd = currentYear + Math.floor(range / 2);
+        }
 
-        // Set the range around the current year
-        this.startYear = currentYear - Math.floor(range / 2);
-        this.endYear = currentYear + Math.floor(range / 2);
+        this.renderYearOptions(this.selectedDate.getFullYear());
 
-        // Populate the dropdown with the initial range
-        this.loadYearRange();
-
-        // Add event listener for changes in the year selection
-        this.yearSelect.addEventListener('change', (e) => this.handleYearSelection(e));
+        // Attach the event listener only once
+        if (!this._yearDropdownListenerAttached) {
+            this.yearSelect.addEventListener('change', (e) => this.handleYearSelection(e));
+            this._yearDropdownListenerAttached = true;
+        }
     }
 
-// Function to load the year range into the select box
-    loadYearRange() {
+    renderYearOptions(selectedYear) {
         const options = [];
-        for (let year = this.startYear; year <= this.endYear; year++) {
-            options.push(`<option value="${year}">${year}</option>`);
+        for (let year = this._yearRangeStart; year <= this._yearRangeEnd; year++) {
+            options.push(`<option value="${year}"${year === selectedYear ? ' selected' : ''}>${year}</option>`);
         }
         this.yearSelect.innerHTML = options.join('');
-        this.yearSelect.value = this.selectedDate.getFullYear(); // Set the current year as selected
+        this.yearSelect.value = selectedYear;
     }
 
-// Handle the year selection event to load more years if needed
+    // Handle the year selection event to load more years if needed
     handleYearSelection(event) {
-        const selectedYear = parseInt(event.target.value);
-
-        // Check if the selected year is the first or last in the current range
-        if (selectedYear === this.startYear) {
-            this.loadMoreYears('backward');
-        } else if (selectedYear === this.endYear) {
-            this.loadMoreYears('forward');
+        const selectedYear = parseInt(event.target.value, 10);
+        // If user selects the first or last year, expand the range
+        if (selectedYear === this._yearRangeStart) {
+            this.loadMoreYears('backward', selectedYear);
+        } else if (selectedYear === this._yearRangeEnd) {
+            this.loadMoreYears('forward', selectedYear);
         }
+        // Always update selectedDate
+        this.selectedDate.setFullYear(selectedYear);
+        this.renderCalendar();
+        this.updateSelectedDatetime();
     }
 
 // Load more years dynamically based on the selected boundary
-    loadMoreYears(direction) {
-        const range = 20; // Range of 20 years
+    loadMoreYears(direction, selectedYear) {
+        const range = 20;
         if (direction === 'forward') {
-            this.startYear = this.endYear;
-            this.endYear = this.startYear + range;
+            this._yearRangeEnd += range;
         } else if (direction === 'backward') {
-            this.endYear = this.startYear;
-            this.startYear = this.endYear - range;
+            this._yearRangeStart -= range;
         }
-
-        // Reload the year range with the new boundaries
-        this.loadYearRange();
+        this.renderYearOptions(selectedYear);
+        this.yearSelect.value = selectedYear;
     }
 
     getCalendarHTML() {
