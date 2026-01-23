@@ -42,8 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
             lbl.textContent = name;
             lbl.setAttribute('for', `${id}-${name}`);
             lbl.style.margin = '0';
-            lbl.style.flex = '1 1 auto';
-            lbl.style.textAlign = 'left';
 
             const input = document.createElement('input');
             input.type = type;
@@ -89,8 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     lbl.classList.remove('form-label', 'mb-0');
                 }
                 lbl.style.margin = '0';
-                lbl.style.flex = '1 1 auto';
-                lbl.style.textAlign = 'left';
             });
             fs.querySelectorAll('input[type="text"], input[type="number"]').forEach(inp => {
                 if (useBootstrap) {
