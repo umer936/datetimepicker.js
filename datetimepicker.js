@@ -88,7 +88,7 @@ class DateTimePicker {
     getControlsHTML() {
         // Use Bootstrap classes for buttons/selects if enabled
         const btnClass = this.settings.useBootstrap ? 'btn btn-primary' : 'btn';
-        const selectClass = this.settings.useBootstrap ? 'form-select pe-4' : '';
+        const selectClass = this.settings.useBootstrap ? 'form-select pe-4 my-1' : '';
         return `
     <div class="calendar-controls mb-3 d-flex align-items-center justify-content-between">
         <button type="button" class="${btnClass} me-2" id="prev-month" aria-label="Previous Month">
