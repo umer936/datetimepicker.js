@@ -17,11 +17,17 @@ class DateTimePicker {
         showNowButton: true, // Show or hide the "Now" button
         showSelectedDatetime: true, // Show or hide the selected datetime
         showCloseButton: true, // Show or hide the "Close" button
+        dayTimeLabel: undefined, // Optional: custom label for "Day and Time"
     };
 
     constructor(element, options) {
         // Merge default settings with the provided options
         this.settings = {...DateTimePicker.defaultSettings, ...options};
+
+        // Ensure language is always set and non-empty
+        if (!this.settings.language) {
+            this.settings.language = 'en-US';
+        }
 
         // Initialize the selectedDate, validate it, and handle invalid dates
         const initialDate = options?.initialValue ? new Date(options.initialValue) : new Date();
@@ -192,35 +198,77 @@ class DateTimePicker {
     }
 
     getSelectedTimeHTML() {
-        return  this.settings.showSelectedDatetime
+        // Use a configurable "Day and Time" label
+        let label = this.getDayTimeLabel();
+        // Always keep input box on the right, even if label is empty
+        return this.settings.showSelectedDatetime
             ? `<div class="d-flex flex-row justify-content-between mb-1">
-                <label for="selected-datetime">Day and Time:</label>
+                ${label ? `<label for="selected-datetime">${label}:</label>` : '<span></span>'}
                 <input id="selected-datetime" class="text-end" aria-live="polite" aria-readonly="true" readonly disabled aria-disabled="true">
             </div>`
             : '';
     }
 
-    // Helper to get localized slider labels using Intl.NumberFormat
+    getDayTimeLabel() {
+        // Use config if provided, else "Day Time" for English, else empty
+        const lang = (this.settings.language || 'en-US').split('-')[0];
+        if (typeof this.settings.dayTimeLabel === 'string') {
+            return this.settings.dayTimeLabel;
+        }
+        if (lang === 'en') return 'Day Time';
+        return '';
+    }
+
+    getLocalizedDayAndTimeLabel() {
+        // Deprecated: no label, so return empty string
+        return '';
+    }
+
+    // Helper to get localized slider labels using Intl.NumberFormat, with consistent capitalization
     getSliderLabel(type) {
         const locale = this.settings.language;
-        let label;
         switch (type) {
             case 'hours':
-                label = new Intl.NumberFormat(locale, { style: 'unit', unit: 'hour', unitDisplay: 'long' }).format(1);
-                return label.replace(/\d+/g, '').trim();
+                return this.getUnitLabel(locale, 'hour');
             case 'minutes':
-                label = new Intl.NumberFormat(locale, { style: 'unit', unit: 'minute', unitDisplay: 'long' }).format(1);
-                return label.replace(/\d+/g, '').trim();
+                return this.getUnitLabel(locale, 'minute');
             case 'seconds':
-                label = new Intl.NumberFormat(locale, { style: 'unit', unit: 'second', unitDisplay: 'long' }).format(1);
-                return label.replace(/\d+/g, '').trim();
-            case 'nanoseconds':
-                // Use the seconds label and prepend 'nano'
-                const secondsLabel = new Intl.NumberFormat(locale, { style: 'unit', unit: 'second', unitDisplay: 'long' }).format(1);
-                return 'nano' + secondsLabel.replace(/\d+/g, '').trim();
+                return this.getUnitLabel(locale, 'second');
+            case 'nanoseconds': {
+                // Use the localized seconds label and prepend "nano" in the same style
+                const secondsLabel = this.getUnitLabel(locale, 'second');
+                // Try to extract the prefix from the unit pattern, fallback to "nano"
+                const nanoPrefix = this.getNanoPrefixFromPattern(locale, secondsLabel);
+                return `${nanoPrefix}${secondsLabel}`;
+            }
             default:
                 return type;
         }
+    }
+
+    getUnitLabel(locale, unit) {
+        // Get the localized unit name, lowercase the first letter for consistency
+        try {
+            let label = new Intl.NumberFormat(locale, { style: 'unit', unit, unitDisplay: 'long' }).format(1);
+            // Remove the number, trim, and lowercase first letter
+            label = label.replace(/\d+/g, '').trim();
+            if (label.length > 0) {
+                label = label[0].toLocaleLowerCase(locale) + label.slice(1);
+            }
+            return label;
+        } catch {
+            return unit;
+        }
+    }
+
+    getNanoPrefixFromPattern(locale, secondsLabel) {
+        // Try to infer the prefix style from the seconds label
+        // Use "nano" in the same capitalization as the first letter of the seconds label
+        // If the seconds label starts with an uppercase, use "Nano", else "nano"
+        const first = secondsLabel[0] || '';
+        return first === first.toLocaleUpperCase(locale)
+            ? 'Nano'
+            : 'nano';
     }
 
     getSlidersHTML() {
@@ -260,11 +308,14 @@ class DateTimePicker {
         const formCheckClass = this.settings.useBootstrap ? 'form-check form-switch' : '';
         const inputClass = this.settings.useBootstrap ? 'form-check-input' : '';
         const labelClass = this.settings.useBootstrap ? 'form-check-label' : '';
+        // Localize Local/UTC toggle label
+        const localLabel = this.getLocalizedLocalLabel();
+        const utcLabel = this.getLocalizedUTCLabel();
         return `
                 <div class="toggle-container justify-content-between w-100">
                     <div class="${formCheckClass}">
                         <input type="checkbox" id="utc-toggle" class="${inputClass}" aria-label="Toggle UTC Time">
-                        <label for="utc-toggle" class="${labelClass}">Local/UTC</label>
+                        <label for="utc-toggle" class="${labelClass}" id="utc-toggle-label">${localLabel}/${utcLabel}</label>
                     </div>
                     <div class="${formCheckClass} mb-3">
                         <input type="checkbox" id="doy-toggle" class="${inputClass}" aria-label="Toggle Day of Year">
@@ -272,6 +323,33 @@ class DateTimePicker {
                     </div>
                 </div>
             `;
+    }
+
+    getLocalizedLocalLabel() {
+        // Use Intl.DateTimeFormat to get the localized time zone name for "local"
+        try {
+            const dtf = new Intl.DateTimeFormat(this.settings.language, { timeZoneName: 'short' });
+            const parts = dtf.formatToParts(new Date());
+            const tz = parts.find(p => p.type === 'timeZoneName');
+            if (tz && tz.value && tz.value !== 'UTC') {
+                return tz.value;
+            }
+        } catch {}
+        // Fallback to "Local"
+        return 'Local';
+    }
+
+    getLocalizedUTCLabel() {
+        // Use Intl.DateTimeFormat to get the localized "UTC" label
+        try {
+            const dtf = new Intl.DateTimeFormat(this.settings.language, { timeZone: 'UTC', timeZoneName: 'short' });
+            const parts = dtf.formatToParts(new Date());
+            const tz = parts.find(p => p.type === 'timeZoneName');
+            if (tz && tz.value) {
+                return tz.value;
+            }
+        } catch {}
+        return 'UTC';
     }
 
     getFooterHTML() {
@@ -345,7 +423,10 @@ class DateTimePicker {
             this.nanosecondsSlider.addEventListener('input', () => this.updateSelectedDatetime());
         }
 
-        this.utcToggle.addEventListener('change', () => this.updateSelectedDatetime());
+        this.utcToggle.addEventListener('change', () => {
+            this.updateSelectedDatetime();
+            this.updateUtcToggleLabel();
+        });
         this.doyToggle.addEventListener('change', () => this.renderCalendar());
 
         this.calendar.addEventListener('click', (e) => this.handleDateSelection(e));
@@ -588,6 +669,8 @@ class DateTimePicker {
         if (this.settings.showSelectedDatetime) {
             this.selectedDatetime.value = datetimeString;
         }
+        // Update the Local/UTC label if present
+        this.updateUtcToggleLabel();
 
         // Update the input box if mode is 'input'
         if (this.settings.mode === 'input') {
@@ -597,6 +680,15 @@ class DateTimePicker {
         if (this.settings.onTimeChange) {
             this.settings.onTimeChange(date);
         }
+    }
+
+    updateUtcToggleLabel() {
+        // Update the Local/UTC label based on toggle state
+        const label = this.container.querySelector('#utc-toggle-label');
+        if (!label) return;
+        const localLabel = this.getLocalizedLocalLabel();
+        const utcLabel = this.getLocalizedUTCLabel();
+        label.textContent = this.utcToggle.checked ? `${utcLabel}/${localLabel}` : `${localLabel}/${utcLabel}`;
     }
 
     toggleFeatures() {
