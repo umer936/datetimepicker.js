@@ -67,6 +67,53 @@
             border-radius: 8px;
             padding: 1rem;
             box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            max-height: 560px;
+            overflow: auto;
+        }
+
+        .option-row {
+            margin-bottom: 0.65rem;
+            border-bottom: 1px dashed #ececec;
+            padding-bottom: 0.45rem;
+        }
+
+        .option-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .snippet-box {
+            margin-top: 1rem;
+            border: 1px solid #dcdcdc;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .snippet-box summary {
+            cursor: pointer;
+            font-weight: 600;
+            padding: 0.65rem 0.75rem;
+            margin: 0;
+        }
+
+        .snippet-box-content {
+            padding: 0 0.75rem 0.75rem;
+        }
+
+        .snippet-box-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .snippet-box textarea {
+            width: 100%;
+            min-height: 180px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.8rem;
         }
 
         fieldset label {
@@ -108,6 +155,12 @@
         body[data-bs-theme="dark"] fieldset {
             background: #23272b;
             color: #f1f1f1;
+        }
+
+
+        body[data-bs-theme="dark"] .snippet-box {
+            background: #1c1f22;
+            border-color: #444;
         }
     </style>
 </head>

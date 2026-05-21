@@ -4,6 +4,9 @@ class DateTimePicker {
         language: 'en-US',
         firstDayOfWeek: 0,         // 0 = Sunday, 1 = Monday, etc.
         initialValue: null,        // Initial date value (Date object or parseable string)
+        monthLabelFormat: 'long',  // Intl month format: 'long' | 'short' | 'narrow'
+        weekdayLabelFormat: 'short', // Intl weekday format: 'long' | 'short' | 'narrow'
+        dateTimeFormat: null,      // Optional Intl.DateTimeFormat options for local output
 
         // Display mode: 'inline' | 'input' | 'button'
         mode: 'inline',
@@ -28,22 +31,59 @@ class DateTimePicker {
         // Optional custom label for the datetime display row (null = auto)
         datetimeLabel: undefined,  // renamed from dayTimeLabel
 
+        // Disable rules
+        minDate: null,
+        maxDate: null,
+        disabledWeekdays: [],      // Array of weekday indexes [0..6]
+        disabledDates: [],         // Array of Date/string values (YYYY-MM-DD preferred)
+
+        // Optional day markers shown on specific dates
+        // [{ date: '2026-12-25', label: 'Holiday', color: '#d32f2f', tooltip: 'Christmas', className: 'my-marker' }]
+        markers: [],
+        showMarkerLegend: false,
+        markerLegendMaxItems: 6,
+
+        // UI strings (localizable overrides)
+        labels: {
+            prevMonth: 'Previous Month',
+            nextMonth: 'Next Month',
+            selectMonth: 'Select Month',
+            selectYear: 'Select Year',
+            toggleUtc: 'Toggle UTC Time',
+            toggleDoy: 'Toggle Day of Year',
+            dayOfMonthDayOfYear: 'Day of Month/Day of Year',
+            now: 'Now',
+            close: 'Close',
+        },
+
         // Styling
         useBootstrap: false,
 
         // Callbacks
         onSelect: null,            // renamed from onDateSelect; called with (Date) on day click
         onChange: null,            // renamed from onTimeChange; called with (Date) on any change
+        onInvalidSelect: null,     // called with ({ date, reason, cell }) when a locked date is clicked
     };
 
     constructor(element, options) {
+        const userLabels = options && typeof options.labels === 'object' ? options.labels : {};
+
         // Merge default settings with the provided options
         this.settings = { ...DateTimePicker.defaultSettings, ...options };
+        this.triggerElement = element;
 
         // Ensure language is always set and non-empty
         if (!this.settings.language) {
             this.settings.language = 'en-US';
         }
+
+        if (!Number.isInteger(this.settings.firstDayOfWeek) || this.settings.firstDayOfWeek < 0 || this.settings.firstDayOfWeek > 6) {
+            this.settings.firstDayOfWeek = 0;
+        }
+
+        this.settings.monthLabelFormat = this.normalizeWidthOption(this.settings.monthLabelFormat, 'long');
+        this.settings.weekdayLabelFormat = this.normalizeWidthOption(this.settings.weekdayLabelFormat, 'short');
+        this.settings.labels = this.getLocalizedLabels(this.settings.language, userLabels);
 
         // Validate mode
         if (!['inline', 'input', 'button'].includes(this.settings.mode)) {
@@ -51,15 +91,138 @@ class DateTimePicker {
             this.settings.mode = 'inline';
         }
 
-        // Initialize the selectedDate, validate it, and handle invalid dates
-        const initialDate = this.settings.initialValue ? new Date(this.settings.initialValue) : new Date();
+        // Initialize selected date. For input mode, respect an existing input value when initialValue is omitted.
+        const initialDate = this.resolveInitialDate(element);
         this.selectedDate = isNaN(initialDate.getTime()) ? new Date() : initialDate;
 
         // Placeholder for the container, which will be initialized in `init`
         this.container = null;
 
+        // Build normalized lookup structures used during rendering and selection.
+        this.prepareConstraints();
+        this.prepareMarkers();
+
         // Call the initialization method
         this.init(element);
+    }
+
+    resolveInitialDate(element) {
+        const explicitInitial = this.parseDateLike(this.settings.initialValue);
+        if (explicitInitial) {
+            return explicitInitial;
+        }
+
+        if (this.settings.mode === 'input' && element instanceof HTMLInputElement) {
+            const fromInput = this.parseDateLike(element.value);
+            if (fromInput) {
+                return fromInput;
+            }
+        }
+
+        return new Date();
+    }
+
+    parseDateLike(value) {
+        if (value === null || value === undefined || value === '') return null;
+        const parsed = value instanceof Date ? new Date(value) : new Date(value);
+        return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    normalizeWidthOption(value, fallback) {
+        const allowed = new Set(['long', 'short', 'narrow']);
+        return allowed.has(value) ? value : fallback;
+    }
+
+    getLocalizedLabels(language, userLabels = {}) {
+        const lang = (language || 'en-US').split('-')[0].toLowerCase();
+        const localizedDefaults = {
+            en: { prevMonth: 'Previous Month', nextMonth: 'Next Month', selectMonth: 'Select Month', selectYear: 'Select Year', toggleUtc: 'Toggle UTC Time', toggleDoy: 'Toggle Day of Year', dayOfMonthDayOfYear: 'Day of Month/Day of Year', now: 'Now', close: 'Close', markerLegend: 'Markers' },
+            es: { prevMonth: 'Mes anterior', nextMonth: 'Mes siguiente', selectMonth: 'Seleccionar mes', selectYear: 'Seleccionar anio', toggleUtc: 'Cambiar hora UTC', toggleDoy: 'Cambiar dia del anio', dayOfMonthDayOfYear: 'Dia del mes/Dia del anio', now: 'Ahora', close: 'Cerrar', markerLegend: 'Marcadores' },
+            fr: { prevMonth: 'Mois precedent', nextMonth: 'Mois suivant', selectMonth: 'Selectionner le mois', selectYear: 'Selectionner l annee', toggleUtc: 'Basculer heure UTC', toggleDoy: 'Basculer jour de l annee', dayOfMonthDayOfYear: 'Jour du mois/Jour de l annee', now: 'Maintenant', close: 'Fermer', markerLegend: 'Marqueurs' },
+            de: { prevMonth: 'Vorheriger Monat', nextMonth: 'Naechster Monat', selectMonth: 'Monat auswaehlen', selectYear: 'Jahr auswaehlen', toggleUtc: 'UTC-Zeit umschalten', toggleDoy: 'Tag des Jahres umschalten', dayOfMonthDayOfYear: 'Tag des Monats/Tag des Jahres', now: 'Jetzt', close: 'Schliessen', markerLegend: 'Markierungen' },
+            pt: { prevMonth: 'Mes anterior', nextMonth: 'Proximo mes', selectMonth: 'Selecionar mes', selectYear: 'Selecionar ano', toggleUtc: 'Alternar hora UTC', toggleDoy: 'Alternar dia do ano', dayOfMonthDayOfYear: 'Dia do mes/Dia do ano', now: 'Agora', close: 'Fechar', markerLegend: 'Marcadores' },
+            it: { prevMonth: 'Mese precedente', nextMonth: 'Mese successivo', selectMonth: 'Seleziona mese', selectYear: 'Seleziona anno', toggleUtc: 'Attiva/disattiva ora UTC', toggleDoy: 'Attiva/disattiva giorno dell anno', dayOfMonthDayOfYear: 'Giorno del mese/Giorno dell anno', now: 'Adesso', close: 'Chiudi', markerLegend: 'Indicatori' },
+            tr: { prevMonth: 'Onceki ay', nextMonth: 'Sonraki ay', selectMonth: 'Ay sec', selectYear: 'Yil sec', toggleUtc: 'UTC saatini degistir', toggleDoy: 'Yilin gununu degistir', dayOfMonthDayOfYear: 'Ayin gunu/Yilin gunu', now: 'Simdi', close: 'Kapat', markerLegend: 'Isaretler' },
+        };
+
+        const fallback = DateTimePicker.defaultSettings.labels;
+        const base = localizedDefaults[lang] || fallback;
+        return { ...fallback, ...base, ...userLabels };
+    }
+
+    prepareConstraints() {
+        const toDate = (value) => {
+            if (!value) return null;
+            const parsed = value instanceof Date ? new Date(value) : new Date(value);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        };
+
+        this.minDate = toDate(this.settings.minDate);
+        this.maxDate = toDate(this.settings.maxDate);
+
+        this.disabledWeekdaySet = new Set(
+            (Array.isArray(this.settings.disabledWeekdays) ? this.settings.disabledWeekdays : [])
+                .map((d) => Number(d))
+                .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+        );
+
+        this.disabledDateSet = new Set();
+        const disabledDates = Array.isArray(this.settings.disabledDates) ? this.settings.disabledDates : [];
+        for (const dateLike of disabledDates) {
+            const parsed = toDate(dateLike);
+            if (parsed) {
+                this.disabledDateSet.add(this.toDateKey(parsed));
+            }
+        }
+    }
+
+    prepareMarkers() {
+        this.markerMap = new Map();
+        this.markerLegendItems = [];
+        const seenLegendItems = new Set();
+        const markers = Array.isArray(this.settings.markers) ? this.settings.markers : [];
+        for (const marker of markers) {
+            if (!marker || !marker.date) continue;
+            const parsed = marker.date instanceof Date ? new Date(marker.date) : new Date(marker.date);
+            if (isNaN(parsed.getTime())) continue;
+            const normalizedMarker = {
+                label: typeof marker.label === 'string' ? marker.label : '',
+                tooltip: typeof marker.tooltip === 'string' ? marker.tooltip : '',
+                color: typeof marker.color === 'string' ? marker.color : '',
+                className: typeof marker.className === 'string' ? marker.className : '',
+            };
+            this.markerMap.set(this.toDateKey(parsed), normalizedMarker);
+
+            if (normalizedMarker.label) {
+                const legendKey = `${normalizedMarker.label}::${normalizedMarker.color}`;
+                if (!seenLegendItems.has(legendKey)) {
+                    this.markerLegendItems.push({ label: normalizedMarker.label, color: normalizedMarker.color });
+                    seenLegendItems.add(legendKey);
+                }
+            }
+        }
+    }
+
+    toDateKey(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    getLabel(key, fallback = '') {
+        const value = this.settings.labels && typeof this.settings.labels[key] === 'string'
+            ? this.settings.labels[key]
+            : fallback;
+        return value || fallback;
+    }
+
+    isDateDisabled(date) {
+        const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const minOnly = this.minDate ? new Date(this.minDate.getFullYear(), this.minDate.getMonth(), this.minDate.getDate()) : null;
+        const maxOnly = this.maxDate ? new Date(this.maxDate.getFullYear(), this.maxDate.getMonth(), this.maxDate.getDate()) : null;
+
+        if (minOnly && dateOnly < minOnly) return true;
+        if (maxOnly && dateOnly > maxOnly) return true;
+        if (this.disabledWeekdaySet.has(date.getDay())) return true;
+        return this.disabledDateSet.has(this.toDateKey(date));
     }
 
     init(element) {
@@ -115,14 +278,14 @@ class DateTimePicker {
         const selectClass = this.settings.useBootstrap ? 'form-select pe-4 my-1' : '';
         return `
     <div class="calendar-controls mb-3 d-flex align-items-center justify-content-between">
-        <button type="button" class="${btnClass} me-2" id="prev-month" aria-label="Previous Month">
+        <button type="button" class="${btnClass} me-2" id="prev-month" aria-label="${this.getLabel('prevMonth', 'Previous Month')}">
             <span>&lt;</span>
         </button>
         <div class="input-group">
-            <select id="monthSelect" class="${selectClass}" aria-label="Select Month"></select>
-            <select id="yearSelect" class="${selectClass}" aria-label="Select Year"></select>
+            <select id="monthSelect" class="${selectClass}" aria-label="${this.getLabel('selectMonth', 'Select Month')}"></select>
+            <select id="yearSelect" class="${selectClass}" aria-label="${this.getLabel('selectYear', 'Select Year')}"></select>
         </div>
-        <button type="button" class="${btnClass} ms-2" id="next-month" aria-label="Next Month">
+        <button type="button" class="${btnClass} ms-2" id="next-month" aria-label="${this.getLabel('nextMonth', 'Next Month')}">
             <span>&gt;</span>
         </button>
     </div>
@@ -133,7 +296,7 @@ class DateTimePicker {
         const dowDiv = document.createElement('div');
         dowDiv.id = 'days-of-week';
 
-        const formatter = new Intl.DateTimeFormat(this.settings.language, { weekday: 'short' });
+        const formatter = new Intl.DateTimeFormat(this.settings.language, { weekday: this.settings.weekdayLabelFormat });
         const daysOfWeek = Array.from({ length: 7 }, (_, i) =>
             formatter.format(new Date(2023, 0, i + 1))
         );
@@ -295,12 +458,12 @@ class DateTimePicker {
         return `
                 <div class="toggle-container justify-content-between w-100">
                     <div class="${formCheckClass}">
-                        <input type="checkbox" id="utc-toggle" class="${inputClass}" aria-label="Toggle UTC Time">
+                        <input type="checkbox" id="utc-toggle" class="${inputClass}" aria-label="${this.getLabel('toggleUtc', 'Toggle UTC Time')}">
                         <label for="utc-toggle" class="${labelClass}" id="utc-toggle-label">${localLabel}/${utcLabel}</label>
                     </div>
                     <div class="${formCheckClass} mb-3">
-                        <input type="checkbox" id="doy-toggle" class="${inputClass}" aria-label="Toggle Day of Year">
-                        <label for="doy-toggle" class="${labelClass}">Day of Month/Day of Year</label>
+                        <input type="checkbox" id="doy-toggle" class="${inputClass}" aria-label="${this.getLabel('toggleDoy', 'Toggle Day of Year')}">
+                        <label for="doy-toggle" class="${labelClass}">${this.getLabel('dayOfMonthDayOfYear', 'Day of Month/Day of Year')}</label>
                     </div>
                 </div>
             `;
@@ -327,23 +490,57 @@ class DateTimePicker {
     }
 
     getFooterHTML() {
-        // Footer is shown if either button is enabled
-        if (!this.settings.showNowButton && !this.settings.showCloseButton) return '';
+        const markerLegendHTML = this.getMarkerLegendHTML();
+        // Footer is shown if a button is enabled or marker legend is enabled and has marker labels.
+        if (!this.settings.showNowButton && !this.settings.showCloseButton && !markerLegendHTML) return '';
 
         const nowBtnClass   = this.settings.useBootstrap ? 'btn btn-secondary' : 'btn';
         const closeBtnClass = this.settings.useBootstrap ? 'btn btn-primary'   : 'btn';
+        const nowLabel = this.getLabel('now', 'Now');
+        const closeLabel = this.getLabel('close', 'Close');
         const nowButtonHTML = this.settings.showNowButton
-            ? `<button type="button" class="${nowBtnClass}" id="now-button" aria-label="Set to Now">Now</button>`
+            ? `<button type="button" class="${nowBtnClass}" id="now-button" aria-label="${nowLabel}">${nowLabel}</button>`
             : '';
         const closeButtonHTML = this.settings.showCloseButton
-            ? `<button type="button" class="${closeBtnClass}" id="close-button" aria-label="Close">Close</button>`
+            ? `<button type="button" class="${closeBtnClass}" id="close-button" aria-label="${closeLabel}">${closeLabel}</button>`
             : '';
         return `
         <div class="d-flex justify-content-between align-items-center">
             ${nowButtonHTML}
             ${closeButtonHTML}
         </div>
+        ${markerLegendHTML}
     `;
+    }
+
+    getMarkerLegendHTML() {
+        if (!this.settings.showMarkerLegend) return '';
+        if (!Array.isArray(this.markerLegendItems) || this.markerLegendItems.length === 0) return '';
+
+        const maxItems = Number.isInteger(this.settings.markerLegendMaxItems)
+            ? Math.max(1, this.settings.markerLegendMaxItems)
+            : 6;
+        const visibleItems = this.markerLegendItems.slice(0, maxItems);
+        const remaining = this.markerLegendItems.length - visibleItems.length;
+        const items = visibleItems.map((item) => {
+            const swatchStyle = item.color ? ` style="background-color: ${item.color}"` : '';
+            return `<span class="dtp-legend-item"><span class="dtp-legend-dot"${swatchStyle}></span>${item.label}</span>`;
+        }).join('');
+        const more = remaining > 0 ? `<span class="dtp-legend-item">+${remaining}</span>` : '';
+
+        return `<div class="dtp-marker-legend" aria-label="${this.getLabel('markerLegend', 'Markers')}">${items}${more}</div>`;
+    }
+
+    getDateDisabledReason(date) {
+        const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const minOnly = this.minDate ? new Date(this.minDate.getFullYear(), this.minDate.getMonth(), this.minDate.getDate()) : null;
+        const maxOnly = this.maxDate ? new Date(this.maxDate.getFullYear(), this.maxDate.getMonth(), this.maxDate.getDate()) : null;
+
+        if (minOnly && dateOnly < minOnly) return 'beforeMinDate';
+        if (maxOnly && dateOnly > maxOnly) return 'afterMaxDate';
+        if (this.disabledWeekdaySet.has(date.getDay())) return 'disabledWeekday';
+        if (this.disabledDateSet.has(this.toDateKey(date))) return 'disabledDate';
+        return 'disabled';
     }
 
     cacheElements(container) {
@@ -457,6 +654,7 @@ class DateTimePicker {
 
         const isVisible = this.datetimePicker.style.display === 'block';
         if (!isVisible) {
+            this.syncFromInputValue();
             this.positionPicker(event.target);
             this.datetimePicker.style.display = 'block';
             this.datetimePicker.parentElement.style.display = 'block';
@@ -466,6 +664,29 @@ class DateTimePicker {
             this.datetimePicker.parentElement.style.display = 'none';
             this.datetimePicker.setAttribute('aria-hidden', 'true');
         }
+    }
+
+    syncFromInputValue() {
+        if (this.settings.mode !== 'input' || !(this.triggerElement instanceof HTMLInputElement)) {
+            return;
+        }
+
+        const parsed = this.parseDateLike(this.triggerElement.value);
+        if (!parsed) {
+            return;
+        }
+
+        this.selectedDate = new Date(parsed);
+
+        if (this.hoursSlider) this.hoursSlider.value = this.selectedDate.getHours();
+        if (this.minutesSlider) this.minutesSlider.value = this.selectedDate.getMinutes();
+        if (this.secondsSlider) this.secondsSlider.value = this.selectedDate.getSeconds();
+        if (this.nanosecondsSlider) this.nanosecondsSlider.value = this.selectedDate.getMilliseconds() * 1e6;
+
+        this.monthSelect.value = this.selectedDate.getMonth();
+        this.yearSelect.value = this.selectedDate.getFullYear();
+        this.renderCalendar();
+        this.updateSelectedDatetime();
     }
 
     positionPicker(trigger) {
@@ -490,7 +711,7 @@ class DateTimePicker {
 
     getMonthNames() {
         return Array.from({ length: 12 }, (_, i) =>
-            new Date(2023, i).toLocaleString(this.settings.language, { month: 'long' })
+            new Date(2023, i).toLocaleString(this.settings.language, { month: this.settings.monthLabelFormat })
         );
     }
 
@@ -520,7 +741,6 @@ class DateTimePicker {
     createDayCell(date, day) {
         const cell = document.createElement('div');
         cell.classList.add('day-cell');
-        cell.tabIndex = 0;
         cell.setAttribute('role', 'gridcell');
 
         if (this.settings.useBootstrap) {
@@ -528,9 +748,11 @@ class DateTimePicker {
         }
 
         const isSelected = this.isSameDate(date, this.selectedDate);
+        const isDisabled = this.isDateDisabled(date);
+        const marker = this.markerMap.get(this.toDateKey(date));
 
         cell.textContent = this.doyToggle.checked ? this.getDayOfYear(date) : day;
-        cell.dataset.date = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        cell.dataset.date = this.toDateKey(date);
 
         if (isSelected) {
             cell.classList.add('selected');
@@ -538,6 +760,35 @@ class DateTimePicker {
             cell.setAttribute('aria-selected', 'true');
         } else {
             cell.setAttribute('aria-selected', 'false');
+        }
+
+        if (isDisabled) {
+            cell.classList.add('disabled');
+            cell.setAttribute('aria-disabled', 'true');
+            cell.tabIndex = -1;
+        } else {
+            cell.setAttribute('aria-disabled', 'false');
+            cell.tabIndex = 0;
+        }
+
+        if (marker) {
+            cell.classList.add('has-marker');
+            if (marker.className) {
+                cell.classList.add(marker.className);
+            }
+            if (marker.tooltip) {
+                cell.title = marker.tooltip;
+            } else if (marker.label) {
+                cell.title = marker.label;
+            }
+
+            const markerDot = document.createElement('span');
+            markerDot.classList.add('day-marker-dot');
+            markerDot.setAttribute('aria-hidden', 'true');
+            if (marker.color) {
+                markerDot.style.backgroundColor = marker.color;
+            }
+            cell.appendChild(markerDot);
         }
 
         return cell;
@@ -552,6 +803,19 @@ class DateTimePicker {
     handleDateSelection(event) {
         const cell = event.target.closest('.day-cell');
         if (!cell) return;
+
+        if (cell.classList.contains('disabled')) {
+            if (this.settings.onInvalidSelect) {
+                const [year, month, day] = cell.dataset.date.split('-').map(Number);
+                const invalidDate = new Date(year, month - 1, day);
+                this.settings.onInvalidSelect({
+                    date: invalidDate,
+                    reason: this.getDateDisabledReason(invalidDate),
+                    cell,
+                });
+            }
+            return;
+        }
 
         const [year, month, day] = cell.dataset.date.split('-').map(Number);
         this.selectedDate = new Date(year, month - 1, day);
@@ -579,7 +843,9 @@ class DateTimePicker {
 
         const datetimeString = this.utcToggle.checked
             ? date.toISOString()
-            : date.toLocaleString(this.settings.language);
+            : (this.settings.dateTimeFormat
+                ? date.toLocaleString(this.settings.language, this.settings.dateTimeFormat)
+                : date.toLocaleString(this.settings.language));
 
         if (this.settings.showSelectedDatetime) {
             this.selectedDatetime.value = datetimeString;
@@ -588,7 +854,7 @@ class DateTimePicker {
         this.updateUtcToggleLabel();
 
         if (this.settings.mode === 'input') {
-            this.container.value = datetimeString;
+            this.triggerElement.value = datetimeString;
         }
 
         if (this.settings.onChange) this.settings.onChange(date);
