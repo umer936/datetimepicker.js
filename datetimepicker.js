@@ -1,36 +1,58 @@
 class DateTimePicker {
     static defaultSettings = {
+        // Locale & calendar
         language: 'en-US',
-        firstDayOfWeek: 0,
+        firstDayOfWeek: 0,         // 0 = Sunday, 1 = Monday, etc.
+        initialValue: null,        // Initial date value (Date object or parseable string)
+
+        // Display mode: 'inline' | 'input' | 'button'
+        mode: 'inline',
+
+        // Visibility toggles
         showCalendar: true,
         showDaysOfWeek: true,
         showSliders: true,
-        showUTC: true,
-        showDOYtoggle: false,
-        mode: 'inline', // Options: 'inline', 'input', 'button'
-        useBootstrap: false, // Option to use Bootstrap 5 styling
-        onDateSelect: null, // Callback for when a date is selected
-        onTimeChange: null, // Callback for when time changes
-        setNowIncludesTime: false, // Whether "Now" updates the time
-        slidersToShow: ['hours', 'minutes'], // Default: Show hours and minutes sliders
-        showFooter: true, // Control visibility of footer
-        showNowButton: true, // Show or hide the "Now" button
-        showSelectedDatetime: true, // Show or hide the selected datetime
-        showCloseButton: true, // Show or hide the "Close" button
-        dayTimeLabel: undefined, // Optional: custom label for "Day and Time"
+        showUtcToggle: true,       // renamed from showUTC
+        showDoyToggle: false,      // renamed from showDOYtoggle (was lowercase 't')
+        showSelectedDatetime: true,
+        showNowButton: true,
+        showCloseButton: true,
+
+        // Sliders: which time components to show
+        // renamed from slidersToShow; valid values: 'hours', 'minutes', 'seconds', 'nanoseconds'
+        sliders: ['hours', 'minutes'],
+
+        // "Now" button behaviour
+        nowSetsTime: false,        // renamed from setNowIncludesTime
+
+        // Optional custom label for the datetime display row (null = auto)
+        datetimeLabel: undefined,  // renamed from dayTimeLabel
+
+        // Styling
+        useBootstrap: false,
+
+        // Callbacks
+        onSelect: null,            // renamed from onDateSelect; called with (Date) on day click
+        onChange: null,            // renamed from onTimeChange; called with (Date) on any change
     };
 
     constructor(element, options) {
         // Merge default settings with the provided options
-        this.settings = {...DateTimePicker.defaultSettings, ...options};
+        this.settings = { ...DateTimePicker.defaultSettings, ...options };
 
         // Ensure language is always set and non-empty
         if (!this.settings.language) {
             this.settings.language = 'en-US';
         }
 
+        // Validate mode
+        if (!['inline', 'input', 'button'].includes(this.settings.mode)) {
+            console.warn(`DateTimePicker: unknown mode "${this.settings.mode}", falling back to "inline".`);
+            this.settings.mode = 'inline';
+        }
+
         // Initialize the selectedDate, validate it, and handle invalid dates
-        const initialDate = options?.initialValue ? new Date(options.initialValue) : new Date();
+        const initialDate = this.settings.initialValue ? new Date(this.settings.initialValue) : new Date();
         this.selectedDate = isNaN(initialDate.getTime()) ? new Date() : initialDate;
 
         // Placeholder for the container, which will be initialized in `init`
@@ -48,16 +70,16 @@ class DateTimePicker {
 
         // Fix display for inline mode
         if (this.settings.mode === 'inline') {
-            this.container.style.display = 'block';  // Make the container always visible
-            this.datetimePicker.style.display = 'block'; // Picker should be shown
-            this.datetimePicker.style.position = 'static'; // Embedded within the parent container
+            this.container.style.display = 'block';
+            this.datetimePicker.style.display = 'block';
+            this.datetimePicker.style.position = 'static';
         } else {
-            this.container.style.display = 'none'; // Hide container in non-inline modes
-            this.datetimePicker.style.display = 'none'; // Hide datetime picker
-            this.datetimePicker.parentElement.style.display = 'none'; // Hide the parent container
+            this.container.style.display = 'none';
+            this.datetimePicker.style.display = 'none';
+            this.datetimePicker.parentElement.style.display = 'none';
         }
 
-        this.toggleFeatures(); // Apply feature visibility based on settings
+        this.toggleFeatures();
     }
 
     createPicker(element) {
@@ -65,7 +87,6 @@ class DateTimePicker {
         container.classList.add('datetime-container');
         container.style.display = 'none';
 
-        // Use Bootstrap classes if enabled
         const pickerClass = this.settings.useBootstrap
             ? 'datetime-picker border rounded shadow p-3 bg-body'
             : 'datetime-picker border rounded shadow p-3 bg-white';
@@ -82,17 +103,14 @@ class DateTimePicker {
         </div>
     `;
 
-        // Insert the container after the element
         if (element.parentNode) {
             element.parentNode.insertBefore(container, element.nextSibling);
         }
 
-        // Cache the container's elements
         this.cacheElements(container);
     }
 
     getControlsHTML() {
-        // Use Bootstrap classes for buttons/selects if enabled
         const btnClass = this.settings.useBootstrap ? 'btn btn-primary' : 'btn';
         const selectClass = this.settings.useBootstrap ? 'form-select pe-4 my-1' : '';
         return `
@@ -115,13 +133,11 @@ class DateTimePicker {
         const dowDiv = document.createElement('div');
         dowDiv.id = 'days-of-week';
 
-        // Get localized days of the week
         const formatter = new Intl.DateTimeFormat(this.settings.language, { weekday: 'short' });
         const daysOfWeek = Array.from({ length: 7 }, (_, i) =>
             formatter.format(new Date(2023, 0, i + 1))
         );
 
-        // Rotate daysOfWeek according to firstDayOfWeek
         const first = this.settings.firstDayOfWeek;
         const rotatedDays = [...daysOfWeek.slice(first), ...daysOfWeek.slice(0, first)];
 
@@ -138,9 +154,7 @@ class DateTimePicker {
         return dowDiv.outerHTML;
     }
 
-// Update the populateYearDropdown method to implement lazy loading with a 20-year range
     populateYearDropdown() {
-        // Set up initial range if not already set
         if (typeof this._yearRangeStart !== 'number' || typeof this._yearRangeEnd !== 'number') {
             const currentYear = this.selectedDate.getFullYear();
             const range = 20;
@@ -150,7 +164,6 @@ class DateTimePicker {
 
         this.renderYearOptions(this.selectedDate.getFullYear());
 
-        // Attach the event listener only once
         if (!this._yearDropdownListenerAttached) {
             this.yearSelect.addEventListener('change', (e) => this.handleYearSelection(e));
             this._yearDropdownListenerAttached = true;
@@ -166,22 +179,18 @@ class DateTimePicker {
         this.yearSelect.value = selectedYear;
     }
 
-    // Handle the year selection event to load more years if needed
     handleYearSelection(event) {
         const selectedYear = parseInt(event.target.value, 10);
-        // If user selects the first or last year, expand the range
         if (selectedYear === this._yearRangeStart) {
             this.loadMoreYears('backward', selectedYear);
         } else if (selectedYear === this._yearRangeEnd) {
             this.loadMoreYears('forward', selectedYear);
         }
-        // Always update selectedDate
         this.selectedDate.setFullYear(selectedYear);
         this.renderCalendar();
         this.updateSelectedDatetime();
     }
 
-// Load more years dynamically based on the selected boundary
     loadMoreYears(direction, selectedYear) {
         const range = 20;
         if (direction === 'forward') {
@@ -198,9 +207,7 @@ class DateTimePicker {
     }
 
     getSelectedTimeHTML() {
-        // Use a configurable "Day and Time" label
-        let label = this.getDayTimeLabel();
-        // Always keep input box on the right, even if label is empty
+        const label = this.getDatetimeLabel();
         return this.settings.showSelectedDatetime
             ? `<div class="d-flex flex-row justify-content-between mb-1">
                 ${label ? `<label for="selected-datetime">${label}:</label>` : '<span></span>'}
@@ -209,35 +216,24 @@ class DateTimePicker {
             : '';
     }
 
-    getDayTimeLabel() {
-        // Use config if provided, else "Day Time" for English, else empty
-        const lang = (this.settings.language || 'en-US').split('-')[0];
-        if (typeof this.settings.dayTimeLabel === 'string') {
-            return this.settings.dayTimeLabel;
+    getDatetimeLabel() {
+        // Use datetimeLabel if explicitly set (even empty string suppresses label)
+        if (typeof this.settings.datetimeLabel === 'string') {
+            return this.settings.datetimeLabel;
         }
+        const lang = (this.settings.language || 'en-US').split('-')[0];
         if (lang === 'en') return 'Day Time';
         return '';
     }
 
-    getLocalizedDayAndTimeLabel() {
-        // Deprecated: no label, so return empty string
-        return '';
-    }
-
-    // Helper to get localized slider labels using Intl.NumberFormat, with consistent capitalization
     getSliderLabel(type) {
         const locale = this.settings.language;
         switch (type) {
-            case 'hours':
-                return this.getUnitLabel(locale, 'hour');
-            case 'minutes':
-                return this.getUnitLabel(locale, 'minute');
-            case 'seconds':
-                return this.getUnitLabel(locale, 'second');
+            case 'hours':    return this.getUnitLabel(locale, 'hour');
+            case 'minutes':  return this.getUnitLabel(locale, 'minute');
+            case 'seconds':  return this.getUnitLabel(locale, 'second');
             case 'nanoseconds': {
-                // Use the localized seconds label and prepend "nano" in the same style
                 const secondsLabel = this.getUnitLabel(locale, 'second');
-                // Try to extract the prefix from the unit pattern, fallback to "nano"
                 const nanoPrefix = this.getNanoPrefixFromPattern(locale, secondsLabel);
                 return `${nanoPrefix}${secondsLabel}`;
             }
@@ -247,10 +243,8 @@ class DateTimePicker {
     }
 
     getUnitLabel(locale, unit) {
-        // Get the localized unit name, lowercase the first letter for consistency
         try {
             let label = new Intl.NumberFormat(locale, { style: 'unit', unit, unitDisplay: 'long' }).format(1);
-            // Remove the number, trim, and lowercase first letter
             label = label.replace(/\d+/g, '').trim();
             if (label.length > 0) {
                 label = label[0].toLocaleLowerCase(locale) + label.slice(1);
@@ -262,29 +256,19 @@ class DateTimePicker {
     }
 
     getNanoPrefixFromPattern(locale, secondsLabel) {
-        // Try to infer the prefix style from the seconds label
-        // Use "nano" in the same capitalization as the first letter of the seconds label
-        // If the seconds label starts with an uppercase, use "Nano", else "nano"
         const first = secondsLabel[0] || '';
-        return first === first.toLocaleUpperCase(locale)
-            ? 'Nano'
-            : 'nano';
+        return first === first.toLocaleUpperCase(locale) ? 'Nano' : 'nano';
     }
 
     getSlidersHTML() {
         const sliderContainerClass = this.settings.useBootstrap ? 'slider-container mb-3' : 'slider-container';
-        const sliders = this.settings.slidersToShow.map(slider => {
+        const sliders = this.settings.sliders.map(slider => {
             switch (slider) {
-                case 'hours':
-                    return this.getSliderHTML('hours', this.getSliderLabel('hours'), 0, 23);
-                case 'minutes':
-                    return this.getSliderHTML('minutes', this.getSliderLabel('minutes'), 0, 59);
-                case 'seconds':
-                    return this.getSliderHTML('seconds', this.getSliderLabel('seconds'), 0, 59);
-                case 'nanoseconds':
-                    return this.getSliderHTML('nanoseconds', this.getSliderLabel('nanoseconds'), 0, 999999999);
-                default:
-                    return '';
+                case 'hours':       return this.getSliderHTML('hours',       this.getSliderLabel('hours'),       0, 23);
+                case 'minutes':     return this.getSliderHTML('minutes',     this.getSliderLabel('minutes'),     0, 59);
+                case 'seconds':     return this.getSliderHTML('seconds',     this.getSliderLabel('seconds'),     0, 59);
+                case 'nanoseconds': return this.getSliderHTML('nanoseconds', this.getSliderLabel('nanoseconds'), 0, 999999999);
+                default:            return '';
             }
         }).join('');
 
@@ -292,7 +276,6 @@ class DateTimePicker {
     }
 
     getSliderHTML(id, label, min, max) {
-        // Use Bootstrap classes for slider and label if enabled
         const labelClass = this.settings.useBootstrap ? 'form-label me-2' : '';
         const inputClass = this.settings.useBootstrap ? 'form-range w-50 ms-auto' : '';
         return `
@@ -304,11 +287,9 @@ class DateTimePicker {
     }
 
     getTogglesHTML() {
-        // Use Bootstrap classes for toggles if enabled
         const formCheckClass = this.settings.useBootstrap ? 'form-check form-switch' : '';
         const inputClass = this.settings.useBootstrap ? 'form-check-input' : '';
         const labelClass = this.settings.useBootstrap ? 'form-check-label' : '';
-        // Localize Local/UTC toggle label
         const localLabel = this.getLocalizedLocalLabel();
         const utcLabel = this.getLocalizedUTCLabel();
         return `
@@ -326,39 +307,31 @@ class DateTimePicker {
     }
 
     getLocalizedLocalLabel() {
-        // Use Intl.DateTimeFormat to get the localized time zone name for "local"
         try {
             const dtf = new Intl.DateTimeFormat(this.settings.language, { timeZoneName: 'short' });
             const parts = dtf.formatToParts(new Date());
             const tz = parts.find(p => p.type === 'timeZoneName');
-            if (tz && tz.value && tz.value !== 'UTC') {
-                return tz.value;
-            }
+            if (tz && tz.value && tz.value !== 'UTC') return tz.value;
         } catch {}
-        // Fallback to "Local"
         return 'Local';
     }
 
     getLocalizedUTCLabel() {
-        // Use Intl.DateTimeFormat to get the localized "UTC" label
         try {
             const dtf = new Intl.DateTimeFormat(this.settings.language, { timeZone: 'UTC', timeZoneName: 'short' });
             const parts = dtf.formatToParts(new Date());
             const tz = parts.find(p => p.type === 'timeZoneName');
-            if (tz && tz.value) {
-                return tz.value;
-            }
+            if (tz && tz.value) return tz.value;
         } catch {}
         return 'UTC';
     }
 
     getFooterHTML() {
-        if (!this.settings.showFooter) {
-            return '';
-        }
-        // Use Bootstrap classes for buttons if enabled
-        const nowBtnClass = this.settings.useBootstrap ? 'btn btn-secondary' : 'btn';
-        const closeBtnClass = this.settings.useBootstrap ? 'btn btn-primary' : 'btn';
+        // Footer is shown if either button is enabled
+        if (!this.settings.showNowButton && !this.settings.showCloseButton) return '';
+
+        const nowBtnClass   = this.settings.useBootstrap ? 'btn btn-secondary' : 'btn';
+        const closeBtnClass = this.settings.useBootstrap ? 'btn btn-primary'   : 'btn';
         const nowButtonHTML = this.settings.showNowButton
             ? `<button type="button" class="${nowBtnClass}" id="now-button" aria-label="Set to Now">Now</button>`
             : '';
@@ -377,20 +350,19 @@ class DateTimePicker {
         this.container = container;
         this.datetimePicker = container.querySelector('.datetime-picker');
         this.monthSelect = container.querySelector('#monthSelect');
-        this.yearSelect = container.querySelector('#yearSelect');
-        this.calendar = container.querySelector('#calendar');
+        this.yearSelect  = container.querySelector('#yearSelect');
+        this.calendar    = container.querySelector('#calendar');
 
-        // Only cache the sliders if they exist
-        this.hoursSlider = this.settings.slidersToShow.includes('hours') ? container.querySelector('#hours') : null;
-        this.minutesSlider = this.settings.slidersToShow.includes('minutes') ? container.querySelector('#minutes') : null;
-        this.secondsSlider = this.settings.slidersToShow.includes('seconds') ? container.querySelector('#seconds') : null;
-        this.nanosecondsSlider = this.settings.slidersToShow.includes('nanoseconds') ? container.querySelector('#nanoseconds') : null;
+        this.hoursSlider       = this.settings.sliders.includes('hours')       ? container.querySelector('#hours')       : null;
+        this.minutesSlider     = this.settings.sliders.includes('minutes')     ? container.querySelector('#minutes')     : null;
+        this.secondsSlider     = this.settings.sliders.includes('seconds')     ? container.querySelector('#seconds')     : null;
+        this.nanosecondsSlider = this.settings.sliders.includes('nanoseconds') ? container.querySelector('#nanoseconds') : null;
 
-        this.utcToggle = container.querySelector('#utc-toggle');
-        this.dowDiv = container.querySelector('#days-of-week');
-        this.doyToggle = container.querySelector('#doy-toggle');
+        this.utcToggle       = container.querySelector('#utc-toggle');
+        this.dowDiv          = container.querySelector('#days-of-week');
+        this.doyToggle       = container.querySelector('#doy-toggle');
         this.selectedDatetime = this.settings.showSelectedDatetime ? container.querySelector('#selected-datetime') : null;
-        this.closeBtn = this.settings.showCloseButton ? container.querySelector('#close-button') : null;
+        this.closeBtn        = this.settings.showCloseButton ? container.querySelector('#close-button') : null;
     }
 
     bindEvents(element) {
@@ -399,126 +371,96 @@ class DateTimePicker {
         }
 
         this.monthSelect.addEventListener('change', () => this.updateCalendarDate());
-        this.yearSelect.addEventListener('change', () => this.updateCalendarDate());
-        this.yearSelect.addEventListener('input', (e) => this.handleYearInputChange(e)); // Handle year input changes
+        this.yearSelect.addEventListener('change',  () => this.updateCalendarDate());
+        this.yearSelect.addEventListener('input',   (e) => this.handleYearInputChange(e));
 
-        // Month navigation
         const prevMonthButton = this.container.querySelector('#prev-month');
         const nextMonthButton = this.container.querySelector('#next-month');
-
         prevMonthButton.addEventListener('click', () => this.changeMonth(-1));
         nextMonthButton.addEventListener('click', () => this.changeMonth(1));
 
-        // Only add event listeners to sliders that exist
-        if (this.hoursSlider) {
-            this.hoursSlider.addEventListener('input', () => this.updateSelectedDatetime());
-        }
-        if (this.minutesSlider) {
-            this.minutesSlider.addEventListener('input', () => this.updateSelectedDatetime());
-        }
-        if (this.secondsSlider) {
-            this.secondsSlider.addEventListener('input', () => this.updateSelectedDatetime());
-        }
-        if (this.nanosecondsSlider) {
-            this.nanosecondsSlider.addEventListener('input', () => this.updateSelectedDatetime());
-        }
+        if (this.hoursSlider)       this.hoursSlider.addEventListener('input',       () => this.updateSelectedDatetime());
+        if (this.minutesSlider)     this.minutesSlider.addEventListener('input',     () => this.updateSelectedDatetime());
+        if (this.secondsSlider)     this.secondsSlider.addEventListener('input',     () => this.updateSelectedDatetime());
+        if (this.nanosecondsSlider) this.nanosecondsSlider.addEventListener('input', () => this.updateSelectedDatetime());
 
         this.utcToggle.addEventListener('change', () => {
             this.updateSelectedDatetime();
             this.updateUtcToggleLabel();
         });
+
         this.doyToggle.addEventListener('change', () => this.renderCalendar());
 
         this.calendar.addEventListener('click', (e) => this.handleDateSelection(e));
         this.calendar.addEventListener('keydown', (e) => {
-            // Check if the pressed key is either spacebar or enter
-            if (e.key === ' ' || e.key === 'Enter') {
-                this.handleDateSelection(e);
-            }
+            if (e.key === ' ' || e.key === 'Enter') this.handleDateSelection(e);
         });
-        this.doyToggle.addEventListener('change', () => this.renderCalendar());
 
-        // Add event listener for "Now" button
         if (this.settings.showNowButton) {
             const nowButton = this.container.querySelector('#now-button');
             nowButton.addEventListener('click', () => this.setToNow());
         }
 
-        // Add event listener for "Close" button
         if (this.settings.showCloseButton) {
             this.closeBtn.addEventListener('click', (e) => this.togglePicker(e));
         }
     }
 
     setToNow() {
-        const now = new Date(); // Get the current date and time
+        const now = new Date();
 
-        // Update the date
         this.selectedDate.setFullYear(now.getFullYear(), now.getMonth(), now.getDate());
 
-        // Conditionally update the time sliders based on the global setting
-        if (this.settings.setNowIncludesTime) {
+        if (this.settings.nowSetsTime) {
             this.selectedDate.setHours(now.getHours());
             this.selectedDate.setMinutes(now.getMinutes());
             this.selectedDate.setSeconds(now.getSeconds());
             this.selectedDate.setMilliseconds(now.getMilliseconds());
 
-            // Update the sliders to match the time
-            this.hoursSlider.value = now.getHours();
-            this.minutesSlider.value = now.getMinutes();
-            this.secondsSlider.value = now.getSeconds();
-            this.nanosecondsSlider.value = now.getMilliseconds() * 1e6; // Convert ms to nanoseconds
+            if (this.hoursSlider)       this.hoursSlider.value = now.getHours();
+            if (this.minutesSlider)     this.minutesSlider.value = now.getMinutes();
+            if (this.secondsSlider)     this.secondsSlider.value = now.getSeconds();
+            if (this.nanosecondsSlider) this.nanosecondsSlider.value = now.getMilliseconds() * 1e6;
         }
 
-        // Update dropdowns for month and year
         this.monthSelect.value = now.getMonth();
-        this.yearSelect.value = now.getFullYear();
+        this.yearSelect.value  = now.getFullYear();
 
-        this.renderCalendar(); // Re-render the calendar with the new date
-        this.populateYearDropdown(); // Re-populate the year dropdown
-        this.updateSelectedDatetime(); // Update the displayed date and time
+        this.renderCalendar();
+        this.populateYearDropdown();
+        this.updateSelectedDatetime();
     }
 
     changeMonth(delta) {
-        const currentMonth = this.selectedDate.getMonth();
-        this.selectedDate.setMonth(currentMonth + delta);
-
-        // Sync dropdowns with the updated selectedDate
+        this.selectedDate.setMonth(this.selectedDate.getMonth() + delta);
         this.monthSelect.value = this.selectedDate.getMonth();
-        this.yearSelect.value = this.selectedDate.getFullYear();
-
-        this.renderCalendar(); // Re-render the calendar
-        this.updateSelectedDatetime(); // Update the datetime display
+        this.yearSelect.value  = this.selectedDate.getFullYear();
+        this.renderCalendar();
+        this.updateSelectedDatetime();
     }
 
     handleYearInputChange(event) {
         const year = parseInt(event.target.value, 10);
         if (!isNaN(year)) {
             this.selectedDate.setFullYear(year);
-
-            // Sync dropdowns with the updated selectedDate
             this.monthSelect.value = this.selectedDate.getMonth();
-            this.yearSelect.value = this.selectedDate.getFullYear();
-
-            this.renderCalendar(); // Re-render the calendar
-            this.updateSelectedDatetime(); // Update the datetime display
+            this.yearSelect.value  = this.selectedDate.getFullYear();
+            this.renderCalendar();
+            this.updateSelectedDatetime();
         }
     }
 
     togglePicker(event) {
         event.stopPropagation();
 
-    // this is for "hide on click-out of box" || this.container.contains(event.target)
-        if (this.settings.mode === 'inline') {
-            return; // Inline mode does not toggle visibility
-        }
+        if (this.settings.mode === 'inline') return;
 
         const isVisible = this.datetimePicker.style.display === 'block';
         if (!isVisible) {
-            this.positionPicker(event.target); // Dynamically position the picker
+            this.positionPicker(event.target);
             this.datetimePicker.style.display = 'block';
             this.datetimePicker.parentElement.style.display = 'block';
-            this.datetimePicker.setAttribute('aria-hidden', 'false'); // For accessibility
+            this.datetimePicker.setAttribute('aria-hidden', 'false');
         } else {
             this.datetimePicker.style.display = 'none';
             this.datetimePicker.parentElement.style.display = 'none';
@@ -527,7 +469,6 @@ class DateTimePicker {
     }
 
     positionPicker(trigger) {
-        // Ensure the trigger's parent container is positioned relatively
         const parent = trigger.offsetParent;
         if (!parent.style.position || parent.style.position === 'static') {
             parent.style.position = 'relative';
@@ -544,49 +485,43 @@ class DateTimePicker {
         this.monthSelect.innerHTML = months
             .map((month, index) => `<option value="${index}">${month}</option>`)
             .join('');
-        this.monthSelect.value = this.selectedDate.getMonth(); // Set the selected month
+        this.monthSelect.value = this.selectedDate.getMonth();
     }
 
     getMonthNames() {
-        return Array.from({length: 12}, (_, i) =>
-            new Date(2023, i).toLocaleString(this.settings.language, {month: 'long'})
+        return Array.from({ length: 12 }, (_, i) =>
+            new Date(2023, i).toLocaleString(this.settings.language, { month: 'long' })
         );
     }
 
     renderCalendar() {
-        const year = this.selectedDate.getFullYear();
+        const year  = this.selectedDate.getFullYear();
         const month = this.selectedDate.getMonth();
-        const firstDay = new Date(year, month, 1).getDay();
+        const firstDay    = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        this.calendar.innerHTML = ''; // Clear previous calendar
-
-        // Fragment is more performant than redrawing every cell
+        this.calendar.innerHTML = '';
         const fragment = document.createDocumentFragment();
 
-        // Adjust empty cells based on firstDayOfWeek
         const emptyCells = (firstDay - this.settings.firstDayOfWeek + 7) % 7;
         for (let i = 0; i < emptyCells; i++) {
             const emptyCell = document.createElement('div');
-            emptyCell.setAttribute('role', 'presentation'); // ARIA for empty
+            emptyCell.setAttribute('role', 'presentation');
             fragment.appendChild(emptyCell);
         }
 
-        // Add day cells
         for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(year, month, day);
-            const cell = this.createDayCell(date, day);
-            fragment.appendChild(cell);
+            fragment.appendChild(this.createDayCell(new Date(year, month, day), day));
         }
 
-        this.calendar.appendChild(fragment); // Single DOM update
+        this.calendar.appendChild(fragment);
     }
 
     createDayCell(date, day) {
         const cell = document.createElement('div');
         cell.classList.add('day-cell');
         cell.tabIndex = 0;
-        cell.setAttribute('role', 'gridcell'); // ARIA role for calendar cell
+        cell.setAttribute('role', 'gridcell');
 
         if (this.settings.useBootstrap) {
             cell.classList.add('btn', 'btn-outline-secondary', 'p-1', 'm-1');
@@ -594,21 +529,13 @@ class DateTimePicker {
 
         const isSelected = this.isSameDate(date, this.selectedDate);
 
-        // Use regular day or Day of Year
-        cell.textContent = this.doyToggle.checked
-            ? this.getDayOfYear(date)
-            : day;
-
-        // Store date for selection
+        cell.textContent = this.doyToggle.checked ? this.getDayOfYear(date) : day;
         cell.dataset.date = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-        // Mark selected date
         if (isSelected) {
             cell.classList.add('selected');
-            if (this.settings.useBootstrap) {
-                cell.classList.add('btn-primary');
-            }
-            cell.setAttribute('aria-selected', 'true'); // Accessibility
+            if (this.settings.useBootstrap) cell.classList.add('btn-primary');
+            cell.setAttribute('aria-selected', 'true');
         } else {
             cell.setAttribute('aria-selected', 'false');
         }
@@ -618,7 +545,7 @@ class DateTimePicker {
 
     getDayOfYear(date) {
         const start = new Date(date.getFullYear(), 0, 1);
-        const diff = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000;
+        const diff  = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000;
         return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
     }
 
@@ -627,83 +554,69 @@ class DateTimePicker {
         if (!cell) return;
 
         const [year, month, day] = cell.dataset.date.split('-').map(Number);
-        const date = new Date(year, month - 1, day); // month is zero-indexed
-
-        this.selectedDate = date;
+        this.selectedDate = new Date(year, month - 1, day);
         this.renderCalendar();
         this.updateSelectedDatetime();
 
-        if (this.settings.onDateSelect) {
-            this.settings.onDateSelect(date);
-        }
+        if (this.settings.onSelect) this.settings.onSelect(new Date(this.selectedDate));
     }
 
     updateCalendarDate() {
-        const year = parseInt(this.yearSelect.value, 10);
+        const year  = parseInt(this.yearSelect.value, 10);
         const month = parseInt(this.monthSelect.value, 10);
         this.selectedDate.setFullYear(year, month);
         this.renderCalendar();
+        this.updateSelectedDatetime();
     }
 
     updateSelectedDatetime() {
         const date = new Date(this.selectedDate);
 
-        if (this.hoursSlider) {
-            date.setHours(this.hoursSlider.value);
-        }
-        if (this.minutesSlider) {
-            date.setMinutes(this.minutesSlider.value);
-        }
-        if (this.secondsSlider) {
-            date.setSeconds(this.secondsSlider.value);
-        }
-        if (this.nanosecondsSlider) {
-            date.setMilliseconds(this.nanosecondsSlider.value / 1e6); // Convert nanoseconds to milliseconds
-        }
+        if (this.hoursSlider)       date.setHours(this.hoursSlider.value);
+        if (this.minutesSlider)     date.setMinutes(this.minutesSlider.value);
+        if (this.secondsSlider)     date.setSeconds(this.secondsSlider.value);
+        if (this.nanosecondsSlider) date.setMilliseconds(this.nanosecondsSlider.value / 1e6);
 
         const datetimeString = this.utcToggle.checked
             ? date.toISOString()
             : date.toLocaleString(this.settings.language);
 
-        // Update the displayed selected datetime
         if (this.settings.showSelectedDatetime) {
             this.selectedDatetime.value = datetimeString;
         }
-        // Update the Local/UTC label if present
+
         this.updateUtcToggleLabel();
 
-        // Update the input box if mode is 'input'
         if (this.settings.mode === 'input') {
             this.container.value = datetimeString;
         }
 
-        if (this.settings.onTimeChange) {
-            this.settings.onTimeChange(date);
-        }
+        if (this.settings.onChange) this.settings.onChange(date);
     }
 
     updateUtcToggleLabel() {
-        // Update the Local/UTC label based on toggle state
         const label = this.container.querySelector('#utc-toggle-label');
         if (!label) return;
         const localLabel = this.getLocalizedLocalLabel();
-        const utcLabel = this.getLocalizedUTCLabel();
-        label.textContent = this.utcToggle.checked ? `${utcLabel}/${localLabel}` : `${localLabel}/${utcLabel}`;
+        const utcLabel   = this.getLocalizedUTCLabel();
+        label.textContent = this.utcToggle.checked
+            ? `${utcLabel}/${localLabel}`
+            : `${localLabel}/${utcLabel}`;
     }
 
     toggleFeatures() {
-        if (!this.settings.showCalendar) this.calendar.style.display = 'none';
-        if (!this.settings.showDaysOfWeek) this.dowDiv.style.display = 'none';
-        if (!this.settings.showSliders) this.container.querySelector('.slider-container').style.display = 'none';
-        if (!this.settings.showUTC) this.utcToggle.parentElement.style.display = 'none';
-        if (!this.settings.showDOYtoggle) this.doyToggle.parentElement.style.display = 'none';
+        if (!this.settings.showCalendar)    this.calendar.style.display = 'none';
+        if (!this.settings.showDaysOfWeek)  this.dowDiv.style.display = 'none';
+        if (!this.settings.showSliders)     this.container.querySelector('.slider-container').style.display = 'none';
+        if (!this.settings.showUtcToggle)   this.utcToggle.parentElement.style.display = 'none';
+        if (!this.settings.showDoyToggle)   this.doyToggle.parentElement.style.display = 'none';
     }
 
     isSameDate(date1, date2) {
         return (
             date1.getFullYear() === date2.getFullYear() &&
-            date1.getMonth() === date2.getMonth() &&
-            date1.getDate() === date2.getDate()
+            date1.getMonth()    === date2.getMonth()    &&
+            date1.getDate()     === date2.getDate()
         );
     }
 }

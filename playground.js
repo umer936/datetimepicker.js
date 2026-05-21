@@ -17,14 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ['showCalendar', 'checkbox', true],
         ['showDaysOfWeek', 'checkbox', true],
         ['showSliders', 'checkbox', true],
-        ['showUTC', 'checkbox', true],
-        ['showDOYtoggle', 'checkbox', false],
-        ['showFooter', 'checkbox', true],
+        ['showUtcToggle', 'checkbox', true],
+        ['showDoyToggle', 'checkbox', false],
         ['showNowButton', 'checkbox', true],
         ['showSelectedDatetime', 'checkbox', true],
         ['showCloseButton', 'checkbox', true],
-        ['setNowIncludesTime', 'checkbox', false],
-        ['slidersToShow', 'text', 'hours,minutes,seconds,nanoseconds']
+        ['nowSetsTime', 'checkbox', false],
+        ['sliders', 'text', 'hours,minutes,seconds,nanoseconds']
     ];
 
     // Generate inputs
@@ -152,21 +151,20 @@ document.addEventListener('DOMContentLoaded', () => {
             showCalendar: get('showCalendar').checked,
             showDaysOfWeek: get('showDaysOfWeek').checked,
             showSliders: get('showSliders').checked,
-            showUTC: get('showUTC').checked,
-            showDOYtoggle: get('showDOYtoggle').checked,
-            showFooter: get('showFooter').checked,
+            showUtcToggle: get('showUtcToggle').checked,
+            showDoyToggle: get('showDoyToggle').checked,
             showNowButton: get('showNowButton').checked,
             showSelectedDatetime: get('showSelectedDatetime').checked,
             showCloseButton: get('showCloseButton').checked,
-            setNowIncludesTime: get('setNowIncludesTime').checked,
-            slidersToShow: get('slidersToShow').value.split(',').map(s => s.trim()).filter(Boolean),
+            nowSetsTime: get('nowSetsTime').checked,
+            sliders: get('sliders').value.split(',').map(s => s.trim()).filter(Boolean),
             mode: id,
             useBootstrap: bootstrapToggle.checked,
-            onDateSelect: (t) => {
+            onSelect: (t) => {
                 if (id === 'input')
                     document.querySelector('#input-wrapper input').value = t.toLocaleString();
             },
-            onTimeChange: (t) => {
+            onChange: (t) => {
                 if (id === 'input')
                     document.querySelector('#input-wrapper input').value = t.toLocaleString();
             }
