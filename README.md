@@ -14,9 +14,9 @@ Get a working picker in under a minute.
 <!-- 1) Optional Bootstrap -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
 
-<!-- 2) DateTimePicker CSS/JS (pin a version for stability) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/umer936/datetimepicker.js@v1.1.0/dist/datetimepicker.min.css">
-<script src="https://cdn.jsdelivr.net/gh/umer936/datetimepicker.js@v1.1.0/dist/datetimepicker.min.js"></script>
+<!-- 2) DateTimePicker CSS/JS (latest published npm release) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datetimepicker.js@latest/dist/datetimepicker.min.css">
+<script src="https://cdn.jsdelivr.net/npm/datetimepicker.js@latest/dist/datetimepicker.min.js"></script>
 
 <!-- 3) Target element -->
 <input id="demo-picker" class="form-control" placeholder="Pick a date/time">
@@ -30,6 +30,8 @@ Get a working picker in under a minute.
   });
 </script>
 ```
+
+For production stability, replace `@latest` with a pinned version (example: `@1.2.0`).
 
 ### Quick Start (npm / Bundler)
 
@@ -77,9 +79,9 @@ To use this library, you can either include it via a `<script>` tag or bundle it
 
     ```html
     <!-- JS -->
-    <script src="https://cdn.jsdelivr.net/gh/umer936/datetimepicker.js@main/dist/datetimepicker.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datetimepicker.js@latest/dist/datetimepicker.min.js"></script>
     <!-- CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/umer936/datetimepicker.js@main/dist/datetimepicker.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datetimepicker.js@latest/dist/datetimepicker.min.css">
     ```
 
     Add the following to your HTML `<head>`:
@@ -98,6 +100,10 @@ To use this library, you can either include it via a `<script>` tag or bundle it
 ### CDN Release Flow (Maintainer)
 
 If you are publishing new versions of this library, use this flow:
+
+> This repo's build workflow now auto-creates a GitHub tag/release as `v<package.json version>` on pushes to `main` (if that tag does not already exist).
+>
+> npm auto-publish is currently disabled in CI. If re-enabled later, configure repository secret `NPM_TOKEN` (npm automation token).
 
 1. Build and tag a release:
 

@@ -1,12 +1,12 @@
 {
   "name": "datetimepicker.js",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A flexible and customizable JavaScript DateTime picker supporting inline, input, and button modes, with calendar, time sliders, UTC/local toggle, Day of Year support, and Bootstrap 5 styling.",
   "main": "src/datetimepicker.js",
   "scripts": {
     "build": "mkdir -p dist && npx esbuild datetimepicker.js --minify --outfile=dist/datetimepicker.min.js && npx esbuild datetimepicker.css --minify --outfile=dist/datetimepicker.min.css"
   },
   "devDependencies": {
-    "esbuild": "^0.25.0"
+    "esbuild": "latest"
   }
 }

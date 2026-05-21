@@ -64,3 +64,83 @@ jobs:
             git commit -m "chore: build & update dist [skip ci]"
             git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/umer936/datetimepicker.js.git HEAD:main
           fi
+
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: commit-dist
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Determine package version
+        id: version
+        run: echo "value=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.version.outputs.value }}
+          name: v${{ steps.version.outputs.value }}
+          commit: main
+          generateReleaseNotes: true
+          makeLatest: true
+          allowUpdates: true
+
+  publish-npm:
+    # Temporarily disabled. Re-enable by restoring the original `if` condition.
+    if: false
+    needs: [build, commit-dist]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js for npm publish
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build dist files
+        run: npm run build
+
+      - name: Read package metadata
+        id: pkg
+        run: |
+          echo "name=$(node -p \"require('./package.json').name\")" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+
+      - name: Check if version already exists on npm
+        id: npmcheck
+        run: |
+          set -e
+          if npm view "${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }}" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish package to npm
+        if: steps.npmcheck.outputs.exists == 'false'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Skip publish (already exists)
+        if: steps.npmcheck.outputs.exists == 'true'
+        run: echo "Version ${{ steps.pkg.outputs.version }} already exists on npm. Skipping publish."
