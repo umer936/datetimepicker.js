@@ -6,6 +6,53 @@ A flexible and customizable JavaScript DateTime picker that supports inline, inp
 
 **TRY ME: https://umer936.github.io/datetimepicker.js/**
 
+## Quick Start
+
+Get a working picker in under a minute.
+
+```html
+<!-- 1) Optional Bootstrap -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+
+<!-- 2) DateTimePicker CSS/JS (pin a version for stability) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/umer936/datetimepicker.js@v1.1.0/dist/datetimepicker.min.css">
+<script src="https://cdn.jsdelivr.net/gh/umer936/datetimepicker.js@v1.1.0/dist/datetimepicker.min.js"></script>
+
+<!-- 3) Target element -->
+<input id="demo-picker" class="form-control" placeholder="Pick a date/time">
+
+<!-- 4) Initialize -->
+<script>
+  new DateTimePicker(document.getElementById('demo-picker'), {
+    mode: 'input',
+    useBootstrap: true,
+    showUtcToggle: true
+  });
+</script>
+```
+
+### Quick Start (npm / Bundler)
+
+Use this if your app is built with Vite, Webpack, Parcel, etc.
+
+```powershell
+npm install datetimepicker.js
+```
+
+```javascript
+import 'datetimepicker.js/dist/datetimepicker.min.css';
+import DateTimePicker from 'datetimepicker.js/dist/datetimepicker.min.js';
+
+const el = document.getElementById('demo-picker');
+new DateTimePicker(el, {
+  mode: 'input',
+  useBootstrap: true,
+  showUtcToggle: true
+});
+```
+
+If your bundler does not support default import from the minified file, include via a script tag (CDN quick start above) or load the file as a side-effect and use the global `DateTimePicker`.
+
 ## Features
 
 - **Inline, input, or button-based modes** to suit your needs.
@@ -47,6 +94,38 @@ To use this library, you can either include it via a `<script>` tag or bundle it
 
     - Download the JavaScript and CSS files (`datetimepicker.js` and `datetimepicker.css`) and include them in your project.
     - Alternatively, use a build system to bundle them.
+
+### CDN Release Flow (Maintainer)
+
+If you are publishing new versions of this library, use this flow:
+
+1. Build and tag a release:
+
+```powershell
+npm install
+npm run build
+git add dist datetimepicker.js datetimepicker.css README.md package.json
+git commit -m "Release vX.Y.Z"
+git tag vX.Y.Z
+git push origin main
+git push origin vX.Y.Z
+```
+
+2. (Recommended) publish to npm:
+
+```powershell
+npm login
+npm publish --access public
+```
+
+3. CDN endpoints:
+   - jsDelivr (GitHub tag):
+     - `https://cdn.jsdelivr.net/gh/umer936/datetimepicker.js@vX.Y.Z/dist/datetimepicker.min.js`
+     - `https://cdn.jsdelivr.net/gh/umer936/datetimepicker.js@vX.Y.Z/dist/datetimepicker.min.css`
+   - jsDelivr (npm):
+     - `https://cdn.jsdelivr.net/npm/datetimepicker.js@X.Y.Z/dist/datetimepicker.min.js`
+     - `https://cdn.jsdelivr.net/npm/datetimepicker.js@X.Y.Z/dist/datetimepicker.min.css`
+   - cdnjs: submit package metadata to `cdnjs/packages` once; future npm releases can auto-sync.
 
 ## Usage
 
@@ -211,7 +290,7 @@ We welcome contributions to improve this library! Please feel free to fork the r
   - Should they go above the sliders?
   - Can they be inlined to save space?
 - Add to CDN
-  - cdnjs, jsdeliver, etc.
+  - cdnjs, jsDelivr, etc.
 - Unit tests or any kind of testing
 
 ### Bugs and Issues
