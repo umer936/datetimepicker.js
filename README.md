@@ -8,7 +8,7 @@ A flexible and customizable JavaScript DateTime picker that supports inline, inp
 
 ## Quick Start
 
-Get a working picker in under a minute.
+Copy/paste this and you are done:
 
 ```html
 <!-- 1) Optional Bootstrap -->
@@ -35,7 +35,7 @@ For production stability, replace `@latest` with a pinned version (example: `@1.
 
 ### Quick Start (npm / Bundler)
 
-Use this if your app is built with Vite, Webpack, Parcel, etc.
+Use this if your app is built with Vite, Webpack, Parcel, etc.:
 
 ```powershell
 npm install datetimepicker.js
@@ -73,29 +73,11 @@ This DateTimePicker library is inspired by many JS libraries that have come befo
 
 ## Installation
 
-To use this library, you can either include it via a `<script>` tag or bundle it with your JavaScript project. 
+Use one of these:
 
-1. **Include via CDN**:
-
-    ```html
-    <!-- JS -->
-    <script src="https://cdn.jsdelivr.net/npm/datetimepicker.js@latest/dist/datetimepicker.min.js"></script>
-    <!-- CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datetimepicker.js@latest/dist/datetimepicker.min.css">
-    ```
-
-    Add the following to your HTML `<head>`:
-
-   ```html
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg==" crossorigin="anonymous" referrerpolicy="no-referrer" /><!-- Optional-->
-   <link rel="stylesheet" href="path/to/datetimepicker.css"> <!-- Replace with path -->
-   <script src="path/to/datetimepicker.js"></script> <!-- Replace with path -->
-   ```
-
-2. **Local Installation**:
-
-    - Download the JavaScript and CSS files (`datetimepicker.js` and `datetimepicker.css`) and include them in your project.
-    - Alternatively, use a build system to bundle them.
+- CDN: use the **Quick Start** snippet above.
+- Bundler: use **Quick Start (npm / Bundler)** above.
+- Local files: include `datetimepicker.js` and `datetimepicker.css` directly in your project.
 
 ### CDN Release Flow (Maintainer)
 

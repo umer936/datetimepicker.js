@@ -82,7 +82,9 @@ jobs:
 
       - name: Determine package version
         id: version
-        run: echo "value=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Create or update release
         uses: ncipollo/release-action@v1
