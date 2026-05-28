@@ -58,6 +58,8 @@ class DateTimePicker {
 
         // Styling
         useBootstrap: false,
+        themeClass: '',
+        themeVariables: null,
 
         // Callbacks
         onSelect: null,            // renamed from onDateSelect; called with (Date) on day click
@@ -250,12 +252,14 @@ class DateTimePicker {
         container.classList.add('datetime-container');
         container.style.display = 'none';
 
+        const themeClass = typeof this.settings.themeClass === 'string' ? this.settings.themeClass.trim() : '';
+
         const pickerClass = this.settings.useBootstrap
             ? 'datetime-picker border rounded shadow p-3 bg-body'
             : 'datetime-picker border rounded shadow p-3 bg-white';
 
         container.innerHTML = `
-        <div class="${pickerClass}" role="dialog" aria-hidden="true">
+        <div class="${themeClass ? `${pickerClass} ${themeClass}` : pickerClass}" role="dialog" aria-hidden="true">
             ${this.getControlsHTML()}
             ${this.getDOWHTML()}
             ${this.getCalendarHTML()}
@@ -271,6 +275,17 @@ class DateTimePicker {
         }
 
         this.cacheElements(container);
+        this.applyThemeVariables();
+    }
+
+    applyThemeVariables() {
+        if (!this.datetimePicker) return;
+        if (!this.settings.themeVariables || typeof this.settings.themeVariables !== 'object') return;
+
+        for (const [key, value] of Object.entries(this.settings.themeVariables)) {
+            if (typeof key !== 'string' || !key.startsWith('--')) continue;
+            this.datetimePicker.style.setProperty(key, String(value));
+        }
     }
 
     getControlsHTML() {
@@ -440,7 +455,7 @@ class DateTimePicker {
 
     getSliderHTML(id, label, min, max) {
         const labelClass = this.settings.useBootstrap ? 'form-label me-2' : '';
-        const inputClass = this.settings.useBootstrap ? 'form-range w-50 ms-auto' : '';
+        const inputClass = this.settings.useBootstrap ? 'form-range w-100' : '';
         return `
                 <div class="d-flex flex-row align-items-center">
                         <label for="${id}" class="${labelClass}">${label}:</label>

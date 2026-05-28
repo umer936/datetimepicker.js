@@ -1,12 +1,38 @@
+:root {
+    --dtp-bg: #ffffff;
+    --dtp-text: #000000;
+    --dtp-border: #cccccc;
+    --dtp-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --dtp-day-bg: #f1f1f1;
+    --dtp-day-text: #000000;
+    --dtp-day-hover-bg: #e0e0ff;
+    --dtp-day-selected-bg: #0d6efd;
+    --dtp-day-selected-text: #ffffff;
+    --dtp-disabled-text: rgba(0, 0, 0, 0.45);
+    --dtp-marker: #dc3545;
+    --dtp-slider-track: #dddddd;
+    --dtp-slider-height: 0.25rem;
+    --dtp-slider-radius: 0.125rem;
+    --dtp-input-bg: #ffffff;
+    --dtp-input-text: #000000;
+    --dtp-button-bg: #f1f1f1;
+    --dtp-button-text: #000000;
+    --dtp-button-border: #cccccc;
+    --dtp-button-hover-bg: #e0e0ff;
+    --dtp-button-radius: 0.375rem;
+}
+
+
 /* Initially hidden picker */
 .datetime-picker {
     display: none;
     position: absolute;
     z-index: 1000;
-    background: white;
-    border: 1px solid #ccc;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: var(--dtp-bg);
+    border: 1px solid var(--dtp-border);
+    box-shadow: var(--dtp-shadow);
     padding: 10px;
+    color: var(--dtp-text);
     /*min-width: 250px;*/
     width: max-content;
 }
@@ -42,9 +68,28 @@
 .datetime-container input[type="text"] {
     font-size: 0.875rem;
     padding: 0.2rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--dtp-border);
     border-radius: 0.25rem;
     transition: background-color 0.2s ease;
+    color: var(--dtp-text);
+}
+
+.datetime-picker button,
+.datetime-picker .btn {
+    background-color: var(--dtp-button-bg) !important;
+    color: var(--dtp-button-text) !important;
+    border-color: var(--dtp-button-border) !important;
+    border-radius: var(--dtp-button-radius) !important;
+}
+
+.datetime-picker button:hover,
+.datetime-picker .btn:hover {
+    background-color: var(--dtp-button-hover-bg) !important;
+}
+
+.datetime-container input[type="text"] {
+    background-color: var(--dtp-input-bg);
+    color: var(--dtp-input-text);
 }
 
 .calendar {
@@ -56,27 +101,28 @@
     position: relative;
     text-align: center;
     cursor: pointer;
-    background-color: #f1f1f1;
+    background-color: var(--dtp-day-bg);
 }
 
 .day-cell:hover {
-    background-color: #e0e0ff;
+    background-color: var(--dtp-day-hover-bg);
     transform: scale(1.05);
 }
 
 .day-cell.selected {
-    background-color: #0d6efd;
-    color: white;
+    background-color: var(--dtp-day-selected-bg);
+    color: var(--dtp-day-selected-text);
 }
 
 .day-cell.disabled {
     cursor: not-allowed;
     opacity: 0.45;
     text-decoration: line-through;
+    color: var(--dtp-disabled-text);
 }
 
 .day-cell.disabled:hover {
-    background-color: #f1f1f1;
+    background-color: var(--dtp-day-bg);
     transform: none;
 }
 
@@ -92,7 +138,7 @@
     height: 0.35rem;
     transform: translateX(-50%);
     border-radius: 999px;
-    background-color: #dc3545;
+    background-color: var(--dtp-marker);
 }
 
 .dtp-marker-legend {
@@ -113,7 +159,7 @@
     width: 0.45rem;
     height: 0.45rem;
     border-radius: 999px;
-    background-color: #dc3545;
+    background-color: var(--dtp-marker);
 }
 
 #days-of-week {
@@ -128,10 +174,24 @@
 /* Sliders */
 .datetime-container input[type="range"] {
     width: 100%;
+    min-width: 0;
     appearance: none;
-    background-color: #ddd;
-    height: 0.25rem;
-    border-radius: 0.125rem;
+    background-color: var(--dtp-slider-track);
+    height: var(--dtp-slider-height);
+    border-radius: var(--dtp-slider-radius);
+}
+
+.slider-container .d-flex {
+    gap: 0.75rem;
+}
+
+.slider-container .d-flex > label {
+    flex: 0 0 7.5rem;
+}
+
+.slider-container .d-flex > input[type="range"] {
+    flex: 1 1 auto;
+    width: 100% !important;
 }
 
 /* Mobile Responsiveness */

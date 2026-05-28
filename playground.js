@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.setAttribute('data-bs-theme', 'light');
     darkToggle.checked = false;
 
+    // Initialize theme builder
+    initThemeBuilder();
+
     const optionTemplate = [
         { name: 'language', type: 'text', def: 'en-US', help: 'Locale code used by Intl formatting (e.g. en-US, fr-FR, tr-TR).' },
         { name: 'firstDayOfWeek', type: 'number', def: 0, help: 'Week start day index: 0 Sunday ... 6 Saturday.' },
@@ -58,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Generate inputs
     for (const id of ['inline', 'input', 'button']) {
         const fs = document.getElementById(`${id}-options`);
+        const snippetHost = document.getElementById(`${id}-snippet-host`);
         optionTemplate.forEach(({ name, type, def, help }) => {
             const row = document.createElement('div');
             row.classList.add('option-row');
@@ -111,7 +115,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <textarea id="${id}-generated-code" readonly></textarea>
             </div>
         `;
-        fs.appendChild(snippetBox);
+        if (snippetHost) {
+            snippetHost.innerHTML = '';
+            snippetHost.appendChild(snippetBox);
+        }
         snippetOutputs[id] = snippetBox.querySelector('textarea');
 
         const copyButton = snippetBox.querySelector('button');
@@ -203,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     darkToggle.addEventListener('change', () => {
         document.body.setAttribute('data-bs-theme', darkToggle.checked ? 'dark' : 'light');
     });
+
 
     function getSerializableOptions(id) {
         const fs = document.getElementById(`${id}-options`);
@@ -384,4 +392,118 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial style setup
     updatePlaygroundFormStyles(bootstrapToggle.checked);
+
+    function initThemeBuilder() {
+        const themeVars = {
+            'var-bg': '--dtp-bg',
+            'var-text': '--dtp-text',
+            'var-border': '--dtp-border',
+            'var-day-bg': '--dtp-day-bg',
+            'var-day-text': '--dtp-day-text',
+            'var-day-hover': '--dtp-day-hover-bg',
+            'var-day-selected': '--dtp-day-selected-bg',
+            'var-day-selected-text': '--dtp-day-selected-text',
+            'var-marker': '--dtp-marker',
+            'var-slider': '--dtp-slider-track',
+            'var-input-bg': '--dtp-input-bg',
+            'var-input-text': '--dtp-input-text',
+            'var-button-bg': '--dtp-button-bg',
+            'var-button-text': '--dtp-button-text',
+            'var-button-border': '--dtp-button-border',
+            'var-button-hover': '--dtp-button-hover-bg',
+            'var-button-radius': '--dtp-button-radius',
+            'var-slider-height': '--dtp-slider-height',
+            'var-slider-radius': '--dtp-slider-radius'
+        };
+
+        const codeBox = document.getElementById('theme-code-box');
+        const codeTextarea = document.getElementById('theme-code');
+        const copyButton = document.getElementById('copy-theme-code');
+        const resetButton = document.getElementById('reset-theme');
+        const defaultThemeValues = {};
+
+        const normalizeColor = (value) => String(value || '').trim().toLowerCase();
+
+        Object.entries(themeVars).forEach(([inputId, cssVar]) => {
+            const input = document.getElementById(inputId);
+            if (input) {
+                defaultThemeValues[cssVar] = normalizeColor(input.value);
+            }
+        });
+
+        function getChangedThemeVars() {
+            const changes = [];
+            Object.entries(themeVars).forEach(([inputId, cssVar]) => {
+                const input = document.getElementById(inputId);
+                if (!input) return;
+                const currentValue = normalizeColor(input.value);
+                if (currentValue !== defaultThemeValues[cssVar]) {
+                    changes.push([cssVar, currentValue]);
+                }
+            });
+            return changes;
+        }
+
+        // Attach listeners to all color inputs
+        Object.entries(themeVars).forEach(([inputId, cssVar]) => {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.addEventListener('change', () => {
+                    const value = input.value;
+                    document.documentElement.style.setProperty(cssVar, value);
+                    updateThemeCode();
+                });
+                input.addEventListener('input', () => {
+                    const value = input.value;
+                    document.documentElement.style.setProperty(cssVar, value);
+                    updateThemeCode();
+                });
+            }
+        });
+
+        if (resetButton) {
+            resetButton.addEventListener('click', () => {
+                Object.entries(themeVars).forEach(([inputId, cssVar]) => {
+                    const input = document.getElementById(inputId);
+                    if (!input) return;
+                    const defaultValue = defaultThemeValues[cssVar] || '';
+                    input.value = defaultValue;
+                    document.documentElement.style.setProperty(cssVar, defaultValue);
+                });
+                updateThemeCode();
+            });
+        }
+
+        function updateThemeCode() {
+            const changedVars = getChangedThemeVars();
+            let css = '/* No overrides yet. Change a color to generate theme CSS. */';
+
+            if (changedVars.length > 0) {
+                css = '[data-dtp-theme="custom"] {\n';
+                changedVars.forEach(([cssVar, value]) => {
+                    css += `    ${cssVar}: ${value};\n`;
+                });
+                css += '}';
+            }
+
+            codeTextarea.value = css;
+            codeBox.style.display = 'block';
+            copyButton.disabled = changedVars.length === 0;
+        }
+
+        copyButton.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(codeTextarea.value);
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy CSS';
+                }, 1500);
+            } catch {
+                codeTextarea.focus();
+                codeTextarea.select();
+            }
+        });
+
+        updateThemeCode();
+    }
 });

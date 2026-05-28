@@ -193,6 +193,8 @@ This mode shows the picker when you click a button.
 | `labels`               | `object`                 | Locale-aware defaults | Override button/ARIA/toggle labels for localization.                       |
 | `mode`                 | `string`                 | `'inline'`            | Picker mode: `'inline'`, `'input'`, `'button'`.                            |
 | `useBootstrap`         | `boolean`                | `false`               | Enable Bootstrap style classes.                                            |
+| `themeClass`           | `string`                 | `''`                  | Extra class applied to the picker root for custom theme targeting.         |
+| `themeVariables`       | `object \| null`         | `null`                | Per-instance CSS custom properties (keys must start with `--dtp-`).        |
 | `onSelect`             | `function \| null`       | `null`                | Called with selected `Date` when a day is picked.                          |
 | `onChange`             | `function \| null`       | `null`                | Called with current `Date` when date/time changes.                         |
 | `onInvalidSelect`      | `function \| null`       | `null`                | Called with `{ date, reason, cell }` when a locked date is clicked.        |
@@ -241,6 +243,47 @@ This mode shows the picker when you click a button.
 By default, the DateTimePicker is styled using basic CSS. However, if you want it to match the Bootstrap 5 design language, simply pass the `useBootstrap: true` option when initializing the picker.
 
 If you prefer to style the picker yourself, you can override the CSS styles in your own stylesheets.
+
+The playground includes a **Theme Builder** section that lets you tweak the picker CSS variables and copy generated CSS.
+It outputs **only changed variables** using a Bootstrap-style data-attribute theme selector:
+
+```css
+[data-dtp-theme="custom"] {
+  --dtp-bg: #ffffff;
+  --dtp-text: #111827;
+  --dtp-border: #d1d5db;
+  --dtp-day-hover-bg: #eef2ff;
+  --dtp-day-selected-bg: #2563eb;
+  --dtp-day-selected-text: #ffffff;
+}
+```
+
+```html
+<div data-dtp-theme="custom">
+  <input id="input-picker" class="form-control" readonly>
+</div>
+
+<script>
+  new DateTimePicker(document.getElementById('input-picker'), {
+    mode: 'input'
+  });
+</script>
+```
+
+Example (hide the popup selected-datetime row and override colors with CSS variables):
+
+```javascript
+new DateTimePicker(document.getElementById('input-picker'), {
+  mode: 'input',
+  showSelectedDatetime: false,
+  themeClass: 'my-dtp-theme',
+  themeVariables: {
+    '--dtp-day-selected-bg': '#111827',
+    '--dtp-day-hover-bg': '#e5e7eb',
+    '--dtp-slider-track': '#cbd5e1'
+  }
+});
+```
 
 ## Customization
 
