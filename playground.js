@@ -403,6 +403,8 @@ document.addEventListener('DOMContentLoaded', () => {
             'var-day-hover': '--dtp-day-hover-bg',
             'var-day-selected': '--dtp-day-selected-bg',
             'var-day-selected-text': '--dtp-day-selected-text',
+            'var-day-cell-padding': '--dtp-day-cell-padding',
+            'var-day-cell-gap': '--dtp-day-cell-gap',
             'var-marker': '--dtp-marker',
             'var-slider': '--dtp-slider-track',
             'var-input-bg': '--dtp-input-bg',

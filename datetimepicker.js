@@ -460,6 +460,7 @@ class DateTimePicker {
                 <div class="d-flex flex-row align-items-center">
                         <label for="${id}" class="${labelClass}">${label}:</label>
                         <input type="range" id="${id}" value="0" min="${min}" max="${max}" step="1" class="${inputClass}" aria-label="${label}">
+                        <span class="dtp-slider-value" id="${id}-value">0</span>
                 </div>
             `;
     }
@@ -570,6 +571,11 @@ class DateTimePicker {
         this.secondsSlider     = this.settings.sliders.includes('seconds')     ? container.querySelector('#seconds')     : null;
         this.nanosecondsSlider = this.settings.sliders.includes('nanoseconds') ? container.querySelector('#nanoseconds') : null;
 
+        this.hoursValue       = this.hoursSlider       ? container.querySelector('#hours-value') : null;
+        this.minutesValue     = this.minutesSlider     ? container.querySelector('#minutes-value') : null;
+        this.secondsValue     = this.secondsSlider     ? container.querySelector('#seconds-value') : null;
+        this.nanosecondsValue = this.nanosecondsSlider ? container.querySelector('#nanoseconds-value') : null;
+
         this.utcToggle       = container.querySelector('#utc-toggle');
         this.dowDiv          = container.querySelector('#days-of-week');
         this.doyToggle       = container.querySelector('#doy-toggle');
@@ -616,6 +622,13 @@ class DateTimePicker {
         if (this.settings.showCloseButton) {
             this.closeBtn.addEventListener('click', (e) => this.togglePicker(e));
         }
+    }
+
+    updateSliderValueDisplays() {
+        if (this.hoursSlider && this.hoursValue) this.hoursValue.textContent = String(this.hoursSlider.value);
+        if (this.minutesSlider && this.minutesValue) this.minutesValue.textContent = String(this.minutesSlider.value);
+        if (this.secondsSlider && this.secondsValue) this.secondsValue.textContent = String(this.secondsSlider.value);
+        if (this.nanosecondsSlider && this.nanosecondsValue) this.nanosecondsValue.textContent = String(this.nanosecondsSlider.value);
     }
 
     setToNow() {
@@ -759,7 +772,7 @@ class DateTimePicker {
         cell.setAttribute('role', 'gridcell');
 
         if (this.settings.useBootstrap) {
-            cell.classList.add('btn', 'btn-outline-secondary', 'p-1', 'm-1');
+            cell.classList.add('btn', 'btn-outline-secondary');
         }
 
         const isSelected = this.isSameDate(date, this.selectedDate);
@@ -865,6 +878,8 @@ class DateTimePicker {
         if (this.settings.showSelectedDatetime) {
             this.selectedDatetime.value = datetimeString;
         }
+
+        this.updateSliderValueDisplays();
 
         this.updateUtcToggleLabel();
 

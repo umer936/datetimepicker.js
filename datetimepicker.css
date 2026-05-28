@@ -8,6 +8,8 @@
     --dtp-day-hover-bg: #e0e0ff;
     --dtp-day-selected-bg: #0d6efd;
     --dtp-day-selected-text: #ffffff;
+    --dtp-day-cell-padding: 0.2rem;
+    --dtp-day-cell-gap: 0.25rem;
     --dtp-disabled-text: rgba(0, 0, 0, 0.45);
     --dtp-marker: #dc3545;
     --dtp-slider-track: #dddddd;
@@ -67,7 +69,7 @@
 .day-cell,
 .datetime-container input[type="text"] {
     font-size: 0.875rem;
-    padding: 0.2rem;
+    padding: var(--dtp-day-cell-padding);
     border: 1px solid var(--dtp-border);
     border-radius: 0.25rem;
     transition: background-color 0.2s ease;
@@ -95,6 +97,7 @@
 .calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
+    gap: var(--dtp-day-cell-gap);
 }
 
 .day-cell {
@@ -165,6 +168,8 @@
 #days-of-week {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
+    gap: var(--dtp-day-cell-gap);
+    margin-bottom: var(--dtp-day-cell-gap);
 }
 
 .dow-cell {
@@ -192,6 +197,15 @@
 .slider-container .d-flex > input[type="range"] {
     flex: 1 1 auto;
     width: 100% !important;
+}
+
+.slider-container .dtp-slider-value {
+    flex: 0 0 auto;
+    min-width: 4.5ch;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85rem;
+    color: var(--dtp-text);
 }
 
 /* Mobile Responsiveness */
