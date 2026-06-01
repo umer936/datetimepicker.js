@@ -60,23 +60,23 @@
 }
 
 .datetime-picker.dtp-theme-bootstrap {
-    --dtp-primary: #0d6efd;
-    --dtp-primary-hover: #0b5ed7;
+    --dtp-primary: var(--bs-primary, #0d6efd);
+    --dtp-primary-hover: var(--bs-primary, #0d6efd);
     --dtp-primary-text: #ffffff;
-    --dtp-bg: #ffffff;
-    --dtp-nav-bg: #f8f9fa;
-    --dtp-calendar-section-bg: #ffffff;
-    --dtp-sliders-bg: #f8f9fa;
-    --dtp-header-bg: #0d6efd;
-    --dtp-hover-bg: #e9ecef;
-    --dtp-border: #dee2e6;
-    --dtp-border-light: #dee2e6;
-    --dtp-text: #212529;
-    --dtp-text-muted: #6c757d;
+    --dtp-bg: var(--bs-body-bg, #ffffff);
+    --dtp-nav-bg: var(--bs-tertiary-bg, #f8f9fa);
+    --dtp-calendar-section-bg: var(--bs-body-bg, #ffffff);
+    --dtp-sliders-bg: var(--bs-tertiary-bg, #f8f9fa);
+    --dtp-header-bg: var(--bs-primary, #0d6efd);
+    --dtp-hover-bg: var(--bs-secondary-bg, #e9ecef);
+    --dtp-border: var(--bs-border-color, #dee2e6);
+    --dtp-border-light: var(--bs-border-color, #dee2e6);
+    --dtp-text: var(--bs-body-color, #212529);
+    --dtp-text-muted: var(--bs-secondary-color, #6c757d);
     --dtp-header-text: #ffffff;
-    --dtp-today-border: #0d6efd;
-    --dtp-slider-track: #dee2e6;
-    --dtp-slider-thumb: #0d6efd;
+    --dtp-today-border: var(--bs-primary, #0d6efd);
+    --dtp-slider-track: var(--bs-border-color, #dee2e6);
+    --dtp-slider-thumb: var(--bs-primary, #0d6efd);
 }
 
 /* ==================== MAIN CONTAINER ==================== */
@@ -280,6 +280,7 @@
     border-top: 1px solid var(--dtp-border-light);
     padding: 10px 10px 4px;
     margin-top: 0;
+    margin-bottom: 0;
 }
 
 /* Slider rows */
@@ -289,6 +290,11 @@
     align-items: center;
     margin-bottom: 6px !important;
     gap: 8px;
+}
+
+/* Match base row specificity so this reliably overrides the 3-column layout. */
+.datetime-picker .d-flex.align-items-center.mb-1.dtp-slider-row--no-value {
+    grid-template-columns: 70px 1fr;
 }
 
 /* Last slider row — no bottom margin so it doesn't stack with container padding */
@@ -363,6 +369,7 @@
 .datetime-picker .toggle-container {
     background: var(--dtp-sliders-bg);
     padding: 2px 10px 0;
+    margin-top: 0;
 }
 
 .datetime-picker .form-check {
@@ -434,25 +441,27 @@
     box-shadow: none;
 }
 
-/* ==================== DARK MODE (optional) ==================== */
-/*
-@media (prefers-color-scheme: dark) {
-    :root {
-        --dtp-bg: #2d2d2d;
-        --dtp-nav-bg: #252525;
-        --dtp-calendar-section-bg: #2d2d2d;
-        --dtp-sliders-bg: #252525;
-        --dtp-header-bg: #383838;
-        --dtp-hover-bg: #404040;
-        --dtp-border: #555555;
-        --dtp-border-light: #444444;
-        --dtp-text: #e0e0e0;
-        --dtp-text-muted: #aaaaaa;
-        --dtp-header-text: #e0e0e0;
-        --dtp-slider-track: #555555;
-    }
+/* ==================== DARK MODE ==================== */
+.datetime-picker.dtp-theme-dark {
+    --dtp-primary: #58a6ff;
+    --dtp-primary-hover: #79b8ff;
+    --dtp-primary-text: #0d1117;
+    --dtp-bg: #1f2329;
+    --dtp-nav-bg: #171b21;
+    --dtp-calendar-section-bg: #1f2329;
+    --dtp-sliders-bg: #171b21;
+    --dtp-header-bg: #2d333b;
+    --dtp-hover-bg: #2d333b;
+    --dtp-border: #3d444d;
+    --dtp-border-light: #30363d;
+    --dtp-text: #e6edf3;
+    --dtp-text-muted: #9da7b3;
+    --dtp-header-text: #e6edf3;
+    --dtp-today-border: #58a6ff;
+    --dtp-slider-track: #3d444d;
+    --dtp-slider-thumb: #58a6ff;
 }
-*/
+
 
 /* ==================== THEME PRESETS ==================== */
 /*

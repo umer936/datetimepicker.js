@@ -191,6 +191,43 @@ new DateTimePicker(document.getElementById('demo-picker'), {
 
 The `theme` object also supports slider-specific fields such as `sliderTrackColor` and `sliderThumbColor`.
 
+### Theme Resolution Order (important)
+
+The picker now resolves styling in this order (lowest to highest priority):
+
+1. Base CSS variables from `datetimepicker.css`
+2. Preset class from `themeClass` (if provided)
+3. If no `themeClass` is provided and `useBootstrap: true`, automatic `dtp-theme-bootstrap` preset is used
+4. `theme` object keys (mapped to picker CSS variables)
+5. `themeVariables` raw CSS custom properties (`--dtp-*`) as final overrides
+
+This means `themeVariables` always wins when keys overlap.
+
+### Bootstrap Dark Mode
+
+For Bootstrap users, dark mode works when:
+
+- Bootstrap CSS is loaded,
+- `useBootstrap: true` is set,
+- and your page (or ancestor) sets `data-bs-theme="dark"`.
+
+Example:
+
+```html
+<html data-bs-theme="dark">
+  <!-- ... -->
+</html>
+```
+
+```javascript
+new DateTimePicker(document.getElementById('demo-picker'), {
+  mode: 'input',
+  useBootstrap: true
+});
+```
+
+If you also pass a `theme` object, only the keys you provide override Bootstrap variables.
+
 ### Initialize Button Picker
 This mode shows the picker when you click a button.
 
@@ -236,6 +273,9 @@ This mode shows the picker when you click a button.
 | `labels`               | `object`                 | Locale-aware defaults | Override button/ARIA/toggle labels for localization.                       |
 | `mode`                 | `string`                 | `'inline'`            | Picker mode: `'inline'`, `'input'`, `'button'`.                            |
 | `useBootstrap`         | `boolean`                | `false`               | Enable Bootstrap style classes.                                            |
+| `themeClass`           | `string \| string[]`    | `''`                  | Optional CSS preset class(es), e.g. `dtp-theme-bootstrap`, `dtp-theme-dark`. |
+| `theme`                | `object \| null`        | `null`                | Mapped theme overrides (friendly keys like `primaryColor`, `dowBackgroundColor`). |
+| `themeVariables`       | `object \| null`        | `null`                | Raw CSS variable overrides (`--dtp-*`), applied last and highest priority. |
 | `onSelect`             | `function \| null`       | `null`                | Called with selected `Date` when a day is picked.                          |
 | `onChange`             | `function \| null`       | `null`                | Called with current `Date` when date/time changes.                         |
 | `onInvalidSelect`      | `function \| null`       | `null`                | Called with `{ date, reason, cell }` when a locked date is clicked.        |

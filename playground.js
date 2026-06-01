@@ -119,10 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
         input.value = def;
         input.title = help;
         input.addEventListener('change', () => {
+            themeSource = 'custom';
+            autoFollowDarkMode = false;
             currentTheme[name] = input.value;
             applyThemeAndRefresh();
         });
         input.addEventListener('input', () => {
+            themeSource = 'custom';
+            autoFollowDarkMode = false;
             currentTheme[name] = input.value;
             applyThemeAndRefresh();
         });
@@ -199,14 +203,10 @@ document.addEventListener('DOMContentLoaded', () => {
             input.title = help;
             input.addEventListener('change', () => {
                 currentOptions[name] = input.value;
-                    themeSource = 'custom';
-                    autoFollowDarkMode = false;
                 refreshPicker();
                 updateCode();
             });
             div.appendChild(input);
-                    themeSource = 'custom';
-                    autoFollowDarkMode = false;
         }
         optionsConfig.appendChild(div);
         currentOptions[name] = def;
@@ -257,19 +257,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function applyThemeAndRefresh() {
-        const root = document.documentElement.style;
         syncThemeToDisplayMode();
         updateThemeInputs();
-        Object.entries(currentTheme).forEach(([key, value]) => {
-            const cssVar = `--dtp-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-            if (value) root.setProperty(cssVar, value);
-        });
         refreshPicker();
         updateCode();
     }
 
+    function getNonDefaultTheme(theme) {
+        const nonDefaultTheme = {};
+        Object.entries(theme || {}).forEach(([key, value]) => {
+            if (value !== DateTimePicker.defaultTheme[key]) {
+                nonDefaultTheme[key] = value;
+            }
+        });
+        return nonDefaultTheme;
+    }
+
     function getOptions() {
-        const opts = { mode: currentMode, theme: { ...currentTheme }, useBootstrap: bootstrapToggle.checked };
+        const opts = { mode: currentMode, useBootstrap: bootstrapToggle.checked };
+        const nonDefaultTheme = getNonDefaultTheme(currentTheme);
+        if (Object.keys(nonDefaultTheme).length > 0) {
+            opts.theme = nonDefaultTheme;
+        }
 
         pickerOptions.forEach(({ name, type }) => {
             const input = document.getElementById(`opt-${name}`);
@@ -323,12 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const options = getOptions();
 
         // Filter out defaults for theme
-        const nonDefaultTheme = {};
-        Object.entries(options.theme || {}).forEach(([key, value]) => {
-            if (value !== DateTimePicker.defaultTheme[key]) {
-                nonDefaultTheme[key] = value;
-            }
-        });
+        const nonDefaultTheme = getNonDefaultTheme(options.theme || {});
 
         // Filter out defaults for other options
         const nonDefaultOptions = { mode: options.mode };

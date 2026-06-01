@@ -344,6 +344,8 @@ class DateTimePicker {
                 backgroundColor:        '--dtp-bg',
                 navBackgroundColor:     '--dtp-nav-bg',
                 hoverColor:             '--dtp-hover-bg',
+                dowBackgroundColor:     '--dtp-header-bg',
+                dowTextColor:           '--dtp-header-text',
                 headerBackgroundColor:  '--dtp-header-bg',
                 headerTextColor:        '--dtp-header-text',
                 textColor:              '--dtp-text',
@@ -389,14 +391,18 @@ class DateTimePicker {
         this.cacheElements(container);
 
         const themeClasses = this.getThemeClasses();
-        if (themeClasses.length > 0 && this.datetimePicker) {
-            this.datetimePicker.classList.add(...themeClasses);
+        if (this.datetimePicker) {
+            if (themeClasses.length > 0) {
+                this.datetimePicker.classList.add(...themeClasses);
+            }
         }
     }
 
     getThemeClasses() {
         const raw = this.settings.themeClass;
-        if (!raw) return [];
+        if (!raw) {
+            return this.settings.useBootstrap ? ['dtp-theme-bootstrap'] : [];
+        }
         if (Array.isArray(raw)) {
             return raw
                 .map((item) => String(item || '').trim())
@@ -551,7 +557,7 @@ class DateTimePicker {
     }
 
     getSlidersHTML() {
-        const sliderContainerClass = 'slider-container sliders-container mb-3';
+        const sliderContainerClass = 'slider-container sliders-container';
         const sliders = this.settings.sliders.map(slider => {
             switch (slider) {
                 case 'hours':       return this.getSliderHTML('hours',       this.getSliderLabel('hours'),       0, 23);
@@ -590,7 +596,7 @@ class DateTimePicker {
                         <input type="checkbox" id="utc-toggle" class="${inputClass}" aria-label="${this.getLabel('toggleUtc', 'Toggle UTC Time')}">
                         <label for="utc-toggle" class="${labelClass}" id="utc-toggle-label">${localLabel}/${utcLabel}</label>
                     </div>
-                    <div class="${formCheckClass} mb-3">
+                    <div class="${formCheckClass}">
                         <input type="checkbox" id="doy-toggle" class="${inputClass}" aria-label="${this.getLabel('toggleDoy', 'Toggle Day of Year')}">
                         <label for="doy-toggle" class="${labelClass}">${this.getLabel('dayOfMonthDayOfYear', 'Day of Month/Day of Year')}</label>
                     </div>
