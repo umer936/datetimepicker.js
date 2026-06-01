@@ -60,6 +60,7 @@ If your bundler does not support default import from the minified file, include 
 - **Inline, input, or button-based modes** to suit your needs.
 - **Day of Year (DOY)** toggle for showing the day of the year instead of the date.
 - **Time Sliders** for setting hours, minutes, seconds, and nanoseconds.
+- **Optional slider value labels** when you want the numeric value shown next to each slider.
 - **UTC/local time** toggle to switch between UTC and local time formats.
 - **Bootstrap 5 styling** support for easy integration with Bootstrap-based UIs.
 - **Multi-language support** based on JavaScript's `Intl` object.
@@ -144,9 +145,48 @@ This mode shows the picker when you click on the input field.
 <script>
   new DateTimePicker(document.getElementById('input-picker'), {
     mode: 'input',
-    useBootstrap: true
+    useBootstrap: true,
+    sliders: ['hours', 'minutes', 'seconds'],
+    showSliderValues: false
   });
 </script>
+```
+
+### Initialize all `.datepick` inputs explicitly
+
+If you want the helper to wire up every `.datepick` element on the page, call it explicitly where you need it:
+
+```html
+<input id="startTime" class="datepick">
+<input id="stopTime" class="datepick">
+
+<script>
+  window.initDateTimePickers({
+    mode: 'input',
+    sliders: ['hours', 'minutes', 'seconds'],
+    showUtcToggle: false,
+    showSelectedDatetime: false,
+    showSliderValues: false
+  });
+</script>
+```
+
+### Style via initializer (`themeVariables`)
+
+You can override CSS custom properties per picker instance without forking the stylesheet:
+
+```javascript
+new DateTimePicker(document.getElementById('demo-picker'), {
+  mode: 'input',
+  themeVariables: {
+    '--dtp-width': '285px',
+    '--dtp-dow-bg-color': '#000000',
+    '--dtp-dow-text-color': '#ffffff',
+    '--dtp-nav-btn-radius': '999px',
+    '--dtp-nav-btn-min-width': '28px',
+    '--dtp-nav-btn-min-height': '28px'
+  }
+});
 ```
 
 ### Initialize Button Picker

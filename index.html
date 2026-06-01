@@ -12,243 +12,374 @@
     <link rel="stylesheet" href="datetimepicker.css">
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: system-ui, sans-serif;
-            margin: 2rem;
-            max-width: 1400px;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 1.5rem;
+            min-height: 100vh;
+        }
+
+        body[data-bs-theme="dark"] {
+            background: #0f1419;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            gap: 2rem;
+            flex-wrap: wrap;
         }
 
         h1 {
-            margin-bottom: 1.5rem;
-        }
-
-        details {
-            margin-bottom: 2rem;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 1rem;
-            background: #fafafa;
-            transition: background 0.2s, border-color 0.2s;
-        }
-
-        summary {
-            font-weight: 600;
-            font-size: 1.1rem;
-            cursor: pointer;
-            margin-bottom: 1rem;
-        }
-
-        .picker-row {
-            display: grid;
-            grid-template-columns: 1fr 320px; /* left: picker | right: options */
-            gap: 1.5rem;
-            align-items: flex-start;
-            width: 100%;
-        }
-
-        @media (max-width: 768px) {
-            .picker-row {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .picker-box {
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 1rem;
-            min-height: 320px;
-            background: white;
-            transition: background 0.2s, border-color 0.2s;
-        }
-
-        fieldset {
-            border: none;
-            background: #fff;
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            max-height: 560px;
-            overflow: auto;
-        }
-
-        .option-row {
-            margin-bottom: 0.65rem;
-            border-bottom: 1px dashed #ececec;
-            padding-bottom: 0.45rem;
-        }
-
-        .option-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-        }
-
-        .snippet-box {
-            margin-top: 1rem;
-            border: 1px solid #dcdcdc;
-            border-radius: 8px;
-            background: #f9f9f9;
-        }
-
-        .snippet-box summary {
-            cursor: pointer;
-            font-weight: 600;
-            padding: 0.65rem 0.75rem;
             margin: 0;
+            font-size: 1.75rem;
         }
 
-        .snippet-box-content {
-            padding: 0 0.75rem 0.75rem;
-        }
-
-        .snippet-box-header {
+        .controls {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-        }
-
-        .snippet-box textarea {
-            width: 100%;
-            min-height: 180px;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: 0.8rem;
-        }
-
-        fieldset label {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 0.3rem 0;
+            gap: 1.5rem;
+            flex-wrap: wrap;
         }
 
         .switch {
             display: inline-flex;
             align-items: center;
-            gap: .5rem;
+            gap: 0.5rem;
             cursor: pointer;
             font-weight: 500;
-            margin-bottom: 1.5rem;
         }
 
         .switch input {
             width: 1.25rem;
             height: 1.25rem;
+            cursor: pointer;
         }
 
-        .quickstart-box {
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 0.9rem;
-            margin-bottom: 1.25rem;
-            background: #fff;
+        .container-main {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
-        .quickstart-box pre {
-            margin: 0.6rem 0 0;
-            white-space: pre-wrap;
-            word-break: break-word;
-            background: #f5f5f5;
+        @media (max-width: 1024px) {
+            .container-main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .picker-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+
+        body[data-bs-theme="dark"] .picker-section {
+            background: #1a1f2e;
+            color: #f1f1f1;
+        }
+
+        .picker-section h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        body[data-bs-theme="dark"] .mode-tabs {
+            border-bottom-color: #444;
+        }
+
+        .mode-tab {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        body[data-bs-theme="dark"] .mode-tab {
+            color: #aaa;
+        }
+
+        .mode-tab.active {
+            color: #0d6efd;
+            border-bottom-color: #0d6efd;
+        }
+
+        .mode-tab:hover {
+            color: #000;
+        }
+
+        body[data-bs-theme="dark"] .mode-tab:hover {
+            color: #fff;
+        }
+
+        #picker-preview {
+            min-height: 350px;
+            padding: 1rem;
+            background: #fafafa;
             border-radius: 8px;
-            padding: 0.75rem;
-            font-size: 0.82rem;
         }
 
-        fieldset > label > input {
-            flex: 0;
+        body[data-bs-theme="dark"] #picker-preview {
+            background: #151b28;
         }
 
-        /* Dark mode for details and picker-box */
-        body[data-bs-theme="dark"] details {
-            background: #23272b;
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .panel-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        body[data-bs-theme="dark"] .panel-section {
+            background: #1a1f2e;
+            color: #f1f1f1;
+        }
+
+        .panel-section h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.75rem;
+        }
+
+        body[data-bs-theme="dark"] .panel-section h3 {
+            border-bottom-color: #444;
+        }
+
+        .form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.35rem;
+            color: #333;
+            cursor: help;
+        }
+
+        body[data-bs-theme="dark"] .form-group label {
+            color: #ccc;
+        }
+
+        .form-group input[type="checkbox"] {
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 0.5rem;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        body[data-bs-theme="dark"] input[type="color"] {
             border-color: #444;
-            color: #f1f1f1;
         }
-        body[data-bs-theme="dark"] .picker-box {
-            background: #23272b;
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        body[data-bs-theme="dark"] input[type="text"],
+        body[data-bs-theme="dark"] textarea,
+        body[data-bs-theme="dark"] select {
+            background-color: #252d3a;
+            color: #f1f1f1;
             border-color: #444;
-            color: #f1f1f1;
-        }
-        body[data-bs-theme="dark"] fieldset {
-            background: #23272b;
-            color: #f1f1f1;
         }
 
-        body[data-bs-theme="dark"] .quickstart-box {
-            background: #23272b;
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #fff;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        body[data-bs-theme="dark"] .btn {
+            background-color: #252d3a;
+            color: #f1f1f1;
             border-color: #444;
-            color: #f1f1f1;
         }
 
-        body[data-bs-theme="dark"] .quickstart-box pre {
-            background: #1a1d20;
-            color: #f1f1f1;
+        .btn:hover {
+            background-color: #f0f0f0;
+            border-color: #999;
         }
 
+        body[data-bs-theme="dark"] .btn:hover {
+            background-color: #2a3340;
+        }
 
-        body[data-bs-theme="dark"] .snippet-box {
-            background: #1c1f22;
-            border-color: #444;
+        .btn-primary {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0b5ed7;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .code-section textarea {
+            resize: vertical;
+            min-height: 180px;
+            font-size: 0.75rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .copy-btn {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        body[data-bs-theme="dark"] ::-webkit-scrollbar-track {
+            background: #1a1f2e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #bbb;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+
+        body[data-bs-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: #555;
         }
     </style>
 </head>
 <body data-bs-theme="light">
 
-<h1>DateTimePicker Interactive Playground</h1>
-<label class="switch">
-    <input type="checkbox" id="toggle-bootstrap">
-    Use Bootstrap Styles
-</label>
-<span id="dark-toggle-container" style="display:none;">
-    <label class="switch">
-        <input type="checkbox" id="toggle-dark">
-        Dark Theme
-    </label>
-</span>
-
-<details class="quickstart-box">
-    <summary>Quick Start (copy/paste)</summary>
-    <pre><code>&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datetimepicker.js@latest/dist/datetimepicker.min.css"&gt;
-&lt;script src="https://cdn.jsdelivr.net/npm/datetimepicker.js@latest/dist/datetimepicker.min.js"&gt;&lt;/script&gt;
-
-&lt;input id="demo-picker" class="form-control" placeholder="Pick a date/time"&gt;
-
-&lt;script&gt;
-  new DateTimePicker(document.getElementById('demo-picker'), {
-    mode: 'input',
-    useBootstrap: true,
-    showUtcToggle: true,
-  });
-&lt;/script&gt;</code></pre>
-</details>
-
-<!-- Inline Picker -->
-<details open>
-    <summary>Inline Picker</summary>
-    <div class="picker-row">
-        <div class="picker-box" id="inline-wrapper"></div>
-        <fieldset id="inline-options"></fieldset>
+<div class="header">
+    <h1>📅 DateTimePicker Playground</h1>
+    <div class="controls">
+        <label class="switch">
+            <input type="checkbox" id="toggle-bootstrap">
+            Bootstrap
+        </label>
+        <span id="dark-toggle-container" style="display:none;">
+            <label class="switch">
+                <input type="checkbox" id="toggle-dark">
+                Dark Mode
+            </label>
+        </span>
     </div>
-</details>
+</div>
 
-<!-- Input Picker -->
-<details>
-    <summary>Input Picker</summary>
-    <div class="picker-row">
-        <div class="picker-box" id="input-wrapper"></div>
-        <fieldset id="input-options"></fieldset>
+<div class="container-main">
+    <!-- LEFT PANEL: Picker Preview -->
+    <div class="left-panel">
+        <div class="picker-section">
+            <div class="mode-tabs">
+                <button class="mode-tab active" data-mode="input">Input</button>
+                <button class="mode-tab" data-mode="inline">Inline</button>
+                <button class="mode-tab" data-mode="button">Button</button>
+            </div>
+            <div id="picker-preview"></div>
+        </div>
     </div>
-</details>
 
-<!-- Button Picker -->
-<details>
-    <summary>Button Picker</summary>
-    <div class="picker-row">
-        <div class="picker-box" id="button-wrapper"></div>
-        <fieldset id="button-options"></fieldset>
+    <!-- RIGHT PANEL: Options -->
+    <div class="right-panel">
+        <!-- Theme Builder -->
+        <div class="panel-section" id="theme-section">
+            <h3>🎨 Theme</h3>
+            <div id="theme-builder"></div>
+        </div>
+
+        <!-- Options Config -->
+        <div class="panel-section" id="options-section">
+            <h3>⚙️ Options</h3>
+            <div id="options-config"></div>
+        </div>
+
+        <!-- Code to Copy -->
+        <div class="panel-section code-section" id="code-section">
+            <h3>💻 Code</h3>
+            <textarea id="generated-code" readonly></textarea>
+            <button class="btn btn-primary copy-btn" id="copy-code-btn">Copy Code</button>
+        </div>
     </div>
-</details>
+</div>
 
 <script src="datetimepicker.js"></script>
 <script src="playground.js"></script>

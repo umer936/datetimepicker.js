@@ -1,387 +1,333 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const pickers = { inline: null, input: null, button: null };
+    let currentPicker = null;
+    let currentMode = 'input';
+    let currentTheme = { ...DateTimePicker.defaultTheme };
+    let currentOptions = {};
+
     const bootstrapToggle = document.getElementById('toggle-bootstrap');
     const darkToggle = document.getElementById('toggle-dark');
     const darkToggleContainer = document.getElementById('dark-toggle-container');
-    const snippetOutputs = {};
+    const pickerPreview = document.getElementById('picker-preview');
+    const modeButtons = document.querySelectorAll('.mode-tab');
+    const generatedCode = document.getElementById('generated-code');
+    const copyCodeBtn = document.getElementById('copy-code-btn');
 
-    // Set Bootstrap Styles unchecked by default
+    // Initialize
     bootstrapToggle.checked = false;
-    document.getElementById('bootstrap-css').disabled = true;
     darkToggleContainer.style.display = 'none';
     document.body.setAttribute('data-bs-theme', 'light');
     darkToggle.checked = false;
 
-    const optionTemplate = [
-        { name: 'language', type: 'text', def: 'en-US', help: 'Locale code used by Intl formatting (e.g. en-US, fr-FR, tr-TR).' },
-        { name: 'firstDayOfWeek', type: 'number', def: 0, help: 'Week start day index: 0 Sunday ... 6 Saturday.' },
-        { name: 'monthLabelFormat', type: 'text', def: 'long', help: 'Month header style: long, short, or narrow.' },
-        { name: 'weekdayLabelFormat', type: 'text', def: 'short', help: 'Weekday header style: long, short, or narrow.' },
-        { name: 'showCalendar', type: 'checkbox', def: true, help: 'Show the calendar grid.' },
-        { name: 'showDaysOfWeek', type: 'checkbox', def: true, help: 'Show weekday labels row.' },
-        { name: 'showSliders', type: 'checkbox', def: true, help: 'Show time sliders area.' },
-        { name: 'showUtcToggle', type: 'checkbox', def: true, help: 'Show local/UTC toggle switch.' },
-        { name: 'showDoyToggle', type: 'checkbox', def: false, help: 'Show day-of-year toggle.' },
-        { name: 'showNowButton', type: 'checkbox', def: true, help: 'Show the Now button in footer.' },
-        { name: 'showSelectedDatetime', type: 'checkbox', def: true, help: 'Show readonly selected datetime field.' },
-        { name: 'showCloseButton', type: 'checkbox', def: true, help: 'Show the Close button in footer.' },
-        { name: 'showMarkerLegend', type: 'checkbox', def: false, help: 'Show marker labels legend under footer buttons.' },
-        { name: 'nowSetsTime', type: 'checkbox', def: false, help: 'If true, Now sets both date and time.' },
-        { name: 'sliders', type: 'text', def: 'hours,minutes,seconds,nanoseconds', help: 'Comma-separated sliders to show.' },
-        { name: 'disabledWeekdays', type: 'text', def: '', help: 'Comma-separated weekdays to block (e.g. 0,6).' },
-        { name: 'disabledDates', type: 'text', def: '', help: 'Comma-separated blocked dates (YYYY-MM-DD).' },
-        { name: 'minDate', type: 'text', def: '', help: 'Earliest selectable date (YYYY-MM-DD).' },
-        { name: 'maxDate', type: 'text', def: '', help: 'Latest selectable date (YYYY-MM-DD).' },
-        { name: 'markers', type: 'text', def: '2026-12-25|Holiday|#dc3545', help: 'Format: date|label|color, separated by commas.' },
-        { name: 'labelNow', type: 'text', def: 'Now', help: 'Custom text for the Now button.' },
-        { name: 'labelClose', type: 'text', def: 'Close', help: 'Custom text for the Close button.' }
+    // Theme options
+    const themeOptions = [
+        { name: 'primaryColor', type: 'color', def: '#0d6efd', help: 'Selected dates color' },
+        { name: 'backgroundColor', type: 'color', def: 'white', help: 'Background color' },
+        { name: 'dowBackgroundColor', type: 'color', def: 'transparent', help: 'Header background' },
+        { name: 'textColor', type: 'color', def: '#000', help: 'Text color' },
+        { name: 'borderColor', type: 'color', def: '#ccc', help: 'Border color' },
+        { name: 'hoverColor', type: 'color', def: '#e0e0ff', help: 'Hover background' },
+        { name: 'disabledColor', type: 'color', def: '#f1f1f1', help: 'Disabled background' },
+        { name: 'dangerColor', type: 'color', def: '#dc3545', help: 'Marker color' },
+        { name: 'borderWidth', type: 'text', def: '1px', help: 'Border width' },
+        { name: 'borderRadius', type: 'text', def: '0.25rem', help: 'Corner radius' },
+        { name: 'buttonBorderRadius', type: 'text', def: '0.25rem', help: 'Button radius (50% = circles)' },
+        { name: 'shadow', type: 'text', def: '0 4px 8px rgba(0, 0, 0, 0.1)', help: 'Box shadow' },
     ];
 
-    const parseCSV = (value) => value.split(',').map((s) => s.trim()).filter(Boolean);
-    const parseWeekdays = (value) => parseCSV(value)
-        .map((d) => parseInt(d, 10))
-        .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
-    const parseDateList = (value) => parseCSV(value);
-    const parseMarkers = (value) => {
-        // Format: YYYY-MM-DD|Label|Color,YYYY-MM-DD|Another Label|#0d6efd
-        return parseCSV(value).map((entry) => {
-            const [date = '', label = '', color = ''] = entry.split('|').map((part) => part.trim());
-            return {
-                date,
-                label,
-                color,
-                tooltip: label,
-            };
-        }).filter((marker) => marker.date);
+    // Preset themes
+    const presets = {
+        'Default': DateTimePicker.defaultTheme,
+        'Dark': {
+            primaryColor: '#0d6efd',
+            backgroundColor: '#1e1e1e',
+            dowBackgroundColor: '#2a2a2a',
+            textColor: '#e0e0e0',
+            borderColor: '#444',
+            hoverColor: '#404040',
+            disabledColor: '#2a2a2a',
+            dangerColor: '#dc3545',
+            borderWidth: '1px',
+            borderRadius: '0.25rem',
+            buttonBorderRadius: '0.25rem',
+            shadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
+        },
+        'Vibrant': {
+            primaryColor: '#ff006e',
+            backgroundColor: '#ffffff',
+            dowBackgroundColor: '#ffe0f0',
+            textColor: '#000000',
+            borderColor: '#ff006e',
+            hoverColor: '#f0e6ff',
+            disabledColor: '#e8e8e8',
+            dangerColor: '#ff006e',
+            borderWidth: '2px',
+            borderRadius: '8px',
+            buttonBorderRadius: '8px',
+            shadow: '0 4px 12px rgba(255, 0, 110, 0.2)',
+        },
+        'Circles': {
+            primaryColor: '#0d6efd',
+            backgroundColor: 'white',
+            dowBackgroundColor: '#f8f9fa',
+            textColor: '#000',
+            borderColor: '#ccc',
+            hoverColor: '#e0e0ff',
+            disabledColor: '#f1f1f1',
+            dangerColor: '#dc3545',
+            borderWidth: '1px',
+            borderRadius: '0.25rem',
+            buttonBorderRadius: '50%',
+            shadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        },
     };
 
-    // Generate inputs
-    for (const id of ['inline', 'input', 'button']) {
-        const fs = document.getElementById(`${id}-options`);
-        optionTemplate.forEach(({ name, type, def, help }) => {
-            const row = document.createElement('div');
-            row.classList.add('option-row');
-            row.title = help;
+    // Picker options
+    const pickerOptions = [
+        { name: 'language', type: 'text', def: 'en-US', help: 'Locale code' },
+        { name: 'firstDayOfWeek', type: 'number', def: 0, help: 'Week start (0=Sunday)' },
+        { name: 'showCalendar', type: 'checkbox', def: true },
+        { name: 'showDaysOfWeek', type: 'checkbox', def: true },
+        { name: 'showSliders', type: 'checkbox', def: true },
+        { name: 'showUtcToggle', type: 'checkbox', def: true },
+        { name: 'showDoyToggle', type: 'checkbox', def: false },
+        { name: 'showNowButton', type: 'checkbox', def: true },
+        { name: 'showCloseButton', type: 'checkbox', def: true },
+        { name: 'nowSetsTime', type: 'checkbox', def: false },
+        { name: 'sliders', type: 'text', def: 'hours,minutes', help: 'Sliders to show' },
+        { name: 'minDate', type: 'text', def: '', help: 'YYYY-MM-DD' },
+        { name: 'maxDate', type: 'text', def: '', help: 'YYYY-MM-DD' },
+    ];
 
-            const lbl = document.createElement('label');
-            lbl.textContent = name;
-            lbl.setAttribute('for', `${id}-${name}`);
-            lbl.style.margin = '0';
-            lbl.title = help;
+    // Build theme builder
+    const themeBuilder = document.getElementById('theme-builder');
+    themeOptions.forEach(({ name, type, def, help }) => {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+
+        const label = document.createElement('label');
+        label.textContent = name;
+        label.title = help;
+        div.appendChild(label);
+
+        const input = document.createElement('input');
+        input.type = type;
+        input.id = `theme-${name}`;
+        input.value = def;
+        input.title = help;
+        input.addEventListener('change', () => {
+            currentTheme[name] = input.value;
+            applyThemeAndRefresh();
+        });
+        input.addEventListener('input', () => {
+            currentTheme[name] = input.value;
+            applyThemeAndRefresh();
+        });
+        div.appendChild(input);
+        themeBuilder.appendChild(div);
+    });
+
+    // Add preset buttons
+    const presetDiv = document.createElement('div');
+    presetDiv.className = 'preset-buttons';
+    for (const [name] of Object.entries(presets)) {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.textContent = name;
+        btn.addEventListener('click', () => {
+            currentTheme = { ...presets[name] };
+            updateThemeInputs();
+            applyThemeAndRefresh();
+        });
+        presetDiv.appendChild(btn);
+    }
+    themeBuilder.appendChild(presetDiv);
+
+    // Build options config
+    const optionsConfig = document.getElementById('options-config');
+    pickerOptions.forEach(({ name, type, def, help }) => {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+
+        if (type === 'checkbox') {
+            const label = document.createElement('label');
+            label.className = 'checkbox-label';
+            label.title = help;
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.id = `opt-${name}`;
+            input.checked = def;
+            input.title = help;
+            input.addEventListener('change', () => {
+                currentOptions[name] = input.checked;
+                refreshPicker();
+                updateCode();
+            });
+            label.appendChild(input);
+            label.appendChild(document.createTextNode(name));
+            div.appendChild(label);
+        } else {
+            const label = document.createElement('label');
+            label.textContent = name;
+            label.title = help;
+            div.appendChild(label);
 
             const input = document.createElement('input');
             input.type = type;
-            input.id = `${id}-${name}`;
-            if (type === 'checkbox') input.checked = def;
-            else input.value = def;
-            input.style.marginLeft = '0.5rem';
+            input.id = `opt-${name}`;
+            input.value = def;
             input.title = help;
-
-            if (type === 'checkbox') {
-                input.style.width = '';
-                input.style.height = '';
-                input.style.minWidth = '';
-                input.style.minHeight = '';
-                input.style.maxWidth = '';
-                input.style.maxHeight = '';
-            } else {
-                input.style.width = 'auto';
-                input.style.maxWidth = '180px';
-            }
-
-            const header = document.createElement('div');
-            header.classList.add('option-header');
-            header.appendChild(lbl);
-            header.appendChild(input);
-
-            row.appendChild(header);
-            fs.appendChild(row);
-        });
-
-        const snippetBox = document.createElement('details');
-        snippetBox.classList.add('snippet-box');
-        snippetBox.open = false;
-        snippetBox.innerHTML = `
-            <summary>Copy/Paste Setup</summary>
-            <div class="snippet-box-content">
-                <div class="snippet-box-header">
-                    <small>Generated from current options.</small>
-                    <button type="button" id="${id}-copy-code" class="btn btn-sm btn-secondary">Copy</button>
-                </div>
-                <textarea id="${id}-generated-code" readonly></textarea>
-            </div>
-        `;
-        fs.appendChild(snippetBox);
-        snippetOutputs[id] = snippetBox.querySelector('textarea');
-
-        const copyButton = snippetBox.querySelector('button');
-        copyButton.addEventListener('click', async () => {
-            const code = snippetOutputs[id].value;
-            if (!code) return;
-            try {
-                await navigator.clipboard.writeText(code);
-                copyButton.textContent = 'Copied!';
-            } catch {
-                snippetOutputs[id].focus();
-                snippetOutputs[id].select();
-                copyButton.textContent = 'Select + Ctrl/Cmd+C';
-            }
-            setTimeout(() => {
-                copyButton.textContent = 'Copy';
-            }, 1400);
-        });
-    }
-
-    // Helper to update playground form controls with Bootstrap classes
-    function updatePlaygroundFormStyles(useBootstrap) {
-        for (const id of ['inline', 'input', 'button']) {
-            const fs = document.getElementById(`${id}-options`);
-            fs.querySelectorAll('.option-header').forEach(row => {
-                row.style.display = 'flex';
-                row.style.alignItems = 'center';
-                row.style.justifyContent = 'space-between';
+            input.addEventListener('change', () => {
+                currentOptions[name] = input.value;
+                refreshPicker();
+                updateCode();
             });
-            fs.querySelectorAll('label').forEach(lbl => {
-                if (useBootstrap) {
-                    lbl.classList.add('form-label', 'mb-0');
-                } else {
-                    lbl.classList.remove('form-label', 'mb-0');
-                }
-                lbl.style.margin = '0';
-            });
-            fs.querySelectorAll('input[type="text"], input[type="number"]').forEach(inp => {
-                if (useBootstrap) {
-                    inp.classList.add('form-control', 'form-control-sm');
-                    inp.style.width = 'auto';
-                    inp.style.maxWidth = '180px';
-                } else {
-                    inp.classList.remove('form-control', 'form-control-sm');
-                    inp.style.width = 'auto';
-                    inp.style.maxWidth = '180px';
-                }
-            });
-            fs.querySelectorAll('input[type="checkbox"]').forEach(inp => {
-                if (useBootstrap) {
-                    inp.classList.add('form-check-input');
-                } else {
-                    inp.classList.remove('form-check-input');
-                }
-                // Always remove all sizing for checkboxes
-                inp.style.width = '';
-                inp.style.height = '';
-                inp.style.minWidth = '';
-                inp.style.minHeight = '';
-                inp.style.maxWidth = '';
-                inp.style.maxHeight = '';
-            });
-            fs.querySelectorAll('select').forEach(sel => {
-                if (useBootstrap) {
-                    sel.classList.add('form-select', 'form-select-sm');
-                    sel.style.width = 'auto';
-                    sel.style.maxWidth = '180px';
-                } else {
-                    sel.classList.remove('form-select', 'form-select-sm');
-                    sel.style.width = 'auto';
-                    sel.style.maxWidth = '180px';
-                }
-            });
+            div.appendChild(input);
         }
-    }
+        optionsConfig.appendChild(div);
+        currentOptions[name] = def;
+    });
 
+    // Mode tabs
+    modeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            modeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentMode = btn.dataset.mode;
+            refreshPicker();
+            updateCode();
+        });
+    });
+
+    // Bootstrap toggle
     bootstrapToggle.addEventListener('change', () => {
         document.getElementById('bootstrap-css').disabled = !bootstrapToggle.checked;
         darkToggleContainer.style.display = bootstrapToggle.checked ? '' : 'none';
-        // Reset dark mode if Bootstrap is disabled
         if (!bootstrapToggle.checked) {
             document.body.setAttribute('data-bs-theme', 'light');
             darkToggle.checked = false;
         }
-        updatePlaygroundFormStyles(bootstrapToggle.checked);
-        refreshAll();
+        refreshPicker();
+        updateCode();
     });
 
+    // Dark mode toggle
     darkToggle.addEventListener('change', () => {
         document.body.setAttribute('data-bs-theme', darkToggle.checked ? 'dark' : 'light');
     });
 
-    function getSerializableOptions(id) {
-        const fs = document.getElementById(`${id}-options`);
-        const get = (n) => fs.querySelector(`#${id}-${n}`);
-
-        return {
-            language: get('language').value,
-            firstDayOfWeek: parseInt(get('firstDayOfWeek').value, 10),
-            monthLabelFormat: get('monthLabelFormat').value || 'long',
-            weekdayLabelFormat: get('weekdayLabelFormat').value || 'short',
-            showCalendar: get('showCalendar').checked,
-            showDaysOfWeek: get('showDaysOfWeek').checked,
-            showSliders: get('showSliders').checked,
-            showUtcToggle: get('showUtcToggle').checked,
-            showDoyToggle: get('showDoyToggle').checked,
-            showNowButton: get('showNowButton').checked,
-            showSelectedDatetime: get('showSelectedDatetime').checked,
-            showCloseButton: get('showCloseButton').checked,
-            showMarkerLegend: get('showMarkerLegend').checked,
-            nowSetsTime: get('nowSetsTime').checked,
-            sliders: parseCSV(get('sliders').value),
-            disabledWeekdays: parseWeekdays(get('disabledWeekdays').value),
-            disabledDates: parseDateList(get('disabledDates').value),
-            minDate: get('minDate').value || null,
-            maxDate: get('maxDate').value || null,
-            markers: parseMarkers(get('markers').value),
-            labels: {
-                now: get('labelNow').value || 'Now',
-                close: get('labelClose').value || 'Close',
-            },
-            mode: id,
-            useBootstrap: bootstrapToggle.checked,
-        };
-    }
-
-    function updateCodeSnippet(id) {
-        const target = snippetOutputs[id];
-        if (!target) return;
-        const options = getMinimalOptionsForSnippet(id);
-        const sampleTarget = id === 'inline'
-            ? 'inline-picker'
-            : id === 'input'
-                ? 'input-picker'
-                : 'button-picker';
-
-        target.value = [
-            `const el = document.getElementById('${sampleTarget}');`,
-            `const picker = new DateTimePicker(el, ${JSON.stringify(options, null, 2)});`
-        ].join('\n');
-    }
-
-    function isSameValue(a, b) {
-        if (a === b) return true;
-        if (Array.isArray(a) && Array.isArray(b)) {
-            if (a.length !== b.length) return false;
-            for (let i = 0; i < a.length; i++) {
-                if (!isSameValue(a[i], b[i])) return false;
-            }
-            return true;
-        }
-        if (a && b && typeof a === 'object' && typeof b === 'object') {
-            const aKeys = Object.keys(a);
-            const bKeys = Object.keys(b);
-            if (aKeys.length !== bKeys.length) return false;
-            for (const key of aKeys) {
-                if (!isSameValue(a[key], b[key])) return false;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    function getMinimalOptionsForSnippet(id) {
-        const options = getSerializableOptions(id);
-        const defaults = DateTimePicker.defaultSettings || {};
-        const minimal = {};
-
-        for (const [key, value] of Object.entries(options)) {
-            if (key === 'labels') {
-                const defaultLabels = defaults.labels || {};
-                const labelDiff = {};
-                for (const [labelKey, labelValue] of Object.entries(value || {})) {
-                    if (!isSameValue(labelValue, defaultLabels[labelKey])) {
-                        labelDiff[labelKey] = labelValue;
-                    }
-                }
-                if (Object.keys(labelDiff).length > 0) {
-                    minimal.labels = labelDiff;
-                }
-                continue;
-            }
-
-            if (!isSameValue(value, defaults[key])) {
-                minimal[key] = value;
-            }
-        }
-
-        return minimal;
-    }
-
-    function getOptions(id) {
-        return {
-            ...getSerializableOptions(id),
-            onSelect: (t) => {
-                if (id === 'input')
-                    document.querySelector('#input-wrapper input').value = t.toLocaleString();
-            },
-            onChange: (t) => {
-                if (id === 'input')
-                    document.querySelector('#input-wrapper input').value = t.toLocaleString();
-            },
-            onInvalidSelect: ({ date, reason }) => {
-                if (id === 'input') {
-                    const target = document.querySelector('#input-wrapper input');
-                    if (target) {
-                        target.value = `Blocked: ${date.toLocaleDateString()} (${reason})`;
-                    }
-                }
-            }
-        };
-    }
-
-    function destroyPicker(id) {
-        const picker = pickers[id];
-        if (picker && typeof picker.destroy === 'function') picker.destroy();
-        pickers[id] = null;
-    }
-
-    function recreateElement(id) {
-        const wrap = document.getElementById(`${id}-wrapper`);
-        wrap.innerHTML = '';
-        let el;
-        if (id === 'inline') {
-            el = document.createElement('div');
-        } else if (id === 'input') {
-            el = document.createElement('input');
-            el.className = 'form-control';
-            el.placeholder = 'Select Date and Time';
-        } else if (id === 'button') {
-            el = document.createElement('button');
-            el.className = 'btn btn-primary';
-            el.textContent = 'Pick Date and Time';
-        }
-        el.id = `${id}-picker`;
-        wrap.appendChild(el);
-
-        // Apply Bootstrap classes to picker containers if enabled
-        if (bootstrapToggle.checked) {
-            wrap.classList.add('bg-body', 'rounded', 'shadow', 'p-3', 'mb-3');
-        } else {
-            wrap.classList.remove('bg-body', 'rounded', 'shadow', 'p-3', 'mb-3');
-        }
-        return el;
-    }
-
-    function initPicker(id) {
-        destroyPicker(id);
-        const el = recreateElement(id);
-        const options = getOptions(id);
-        pickers[id] = new DateTimePicker(el, options);
-        updateCodeSnippet(id);
-    }
-
-    function refreshAll() {
-        ['inline', 'input', 'button'].forEach(initPicker);
-    }
-
-    function attachOptionListeners(id) {
-        const fs = document.getElementById(`${id}-options`);
-        fs.querySelectorAll('input, select').forEach(inp => {
-            inp.addEventListener('change', () => initPicker(id));
+    function updateThemeInputs() {
+        themeOptions.forEach(({ name }) => {
+            const input = document.getElementById(`theme-${name}`);
+            if (input) input.value = currentTheme[name] || '';
         });
     }
 
-    ['inline', 'input', 'button'].forEach(id => {
-        attachOptionListeners(id);
-        initPicker(id);
+    function applyThemeAndRefresh() {
+        const root = document.documentElement.style;
+        Object.entries(currentTheme).forEach(([key, value]) => {
+            const cssVar = `--dtp-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+            if (value) root.setProperty(cssVar, value);
+        });
+        refreshPicker();
+        updateCode();
+    }
+
+    function getOptions() {
+        const opts = { mode: currentMode, theme: { ...currentTheme }, useBootstrap: bootstrapToggle.checked };
+
+        pickerOptions.forEach(({ name, type }) => {
+            const input = document.getElementById(`opt-${name}`);
+            if (input) {
+                if (type === 'checkbox') {
+                    opts[name] = input.checked;
+                } else if (type === 'number') {
+                    opts[name] = parseInt(input.value, 10);
+                } else if (name === 'sliders') {
+                    // Parse sliders string into array
+                    opts[name] = input.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                } else {
+                    opts[name] = input.value || undefined;
+                }
+            }
+        });
+
+        return opts;
+    }
+
+    function refreshPicker() {
+        pickerPreview.innerHTML = '';
+
+        if (currentPicker) currentPicker = null;
+
+        const options = getOptions();
+        let el;
+
+        if (currentMode === 'input') {
+            el = document.createElement('input');
+            el.type = 'text';
+            el.placeholder = 'Pick date and time';
+            el.style.width = '100%';
+            el.style.padding = '0.5rem';
+            el.style.fontSize = '1rem';
+        } else if (currentMode === 'inline') {
+            el = document.createElement('div');
+        } else if (currentMode === 'button') {
+            el = document.createElement('button');
+            el.textContent = 'Pick Date and Time';
+            el.style.padding = '0.75rem 1.5rem';
+            el.style.fontSize = '1rem';
+            el.style.cursor = 'pointer';
+        }
+
+        pickerPreview.appendChild(el);
+        currentPicker = new DateTimePicker(el, options);
+    }
+
+    function updateCode() {
+        const options = getOptions();
+
+        // Filter out defaults for theme
+        const nonDefaultTheme = {};
+        Object.entries(options.theme || {}).forEach(([key, value]) => {
+            if (value !== DateTimePicker.defaultTheme[key]) {
+                nonDefaultTheme[key] = value;
+            }
+        });
+
+        // Filter out defaults for other options
+        const nonDefaultOptions = { mode: options.mode };
+        if (Object.keys(nonDefaultTheme).length > 0) {
+            nonDefaultOptions.theme = nonDefaultTheme;
+        }
+        if (options.useBootstrap) {
+            nonDefaultOptions.useBootstrap = true;
+        }
+
+        // Add other non-default options
+        pickerOptions.forEach(({ name, def }) => {
+            const val = options[name];
+            if (val !== def && val !== undefined) {
+                nonDefaultOptions[name] = val;
+            }
+        });
+
+        generatedCode.value = `new DateTimePicker(element, ${JSON.stringify(nonDefaultOptions, null, 2)})`;
+    }
+
+    // Copy code
+    copyCodeBtn.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(generatedCode.value);
+            const original = copyCodeBtn.textContent;
+            copyCodeBtn.textContent = 'Copied!';
+            setTimeout(() => { copyCodeBtn.textContent = original; }, 2000);
+        } catch {
+            generatedCode.select();
+            copyCodeBtn.textContent = 'Select + Copy';
+        }
     });
 
-    // Initial style setup
-    updatePlaygroundFormStyles(bootstrapToggle.checked);
+    // Initial setup
+    refreshPicker();
+    updateCode();
 });

@@ -18,6 +18,7 @@ class DateTimePicker {
         showUtcToggle: true,       // renamed from showUTC
         showDoyToggle: false,      // renamed from showDOYtoggle (was lowercase 't')
         showSelectedDatetime: true,
+        showSliderValues: false,
         showNowButton: true,
         showCloseButton: true,
 
@@ -58,6 +59,12 @@ class DateTimePicker {
 
         // Styling
         useBootstrap: false,
+        themeClass: '',
+        themeVariables: null,
+        theme: null,
+
+        // UTC default
+        defaultToUTC: false,
 
         // Callbacks
         onSelect: null,            // renamed from onDateSelect; called with (Date) on day click
@@ -65,7 +72,65 @@ class DateTimePicker {
         onInvalidSelect: null,     // called with ({ date, reason, cell }) when a locked date is clicked
     };
 
+    static normalizeOptions(options = {}) {
+        const normalized = { ...options };
+
+        if (Object.prototype.hasOwnProperty.call(normalized, 'showUTC') && !Object.prototype.hasOwnProperty.call(normalized, 'showUtcToggle')) {
+            normalized.showUtcToggle = normalized.showUTC;
+        }
+        if (Object.prototype.hasOwnProperty.call(normalized, 'showDOYtoggle') && !Object.prototype.hasOwnProperty.call(normalized, 'showDoyToggle')) {
+            normalized.showDoyToggle = normalized.showDOYtoggle;
+        }
+        if (Array.isArray(normalized.slidersToShow) && !Array.isArray(normalized.sliders)) {
+            normalized.sliders = normalized.slidersToShow.map((name) => name === 'milliseconds' ? 'nanoseconds' : name);
+        }
+        if (Object.prototype.hasOwnProperty.call(normalized, 'setNowIncludesTime') && !Object.prototype.hasOwnProperty.call(normalized, 'nowSetsTime')) {
+            normalized.nowSetsTime = normalized.setNowIncludesTime;
+        }
+        if (Object.prototype.hasOwnProperty.call(normalized, 'dayTimeLabel') && !Object.prototype.hasOwnProperty.call(normalized, 'datetimeLabel')) {
+            normalized.datetimeLabel = normalized.dayTimeLabel;
+        }
+        if (typeof normalized.onDateSelect === 'function' && typeof normalized.onSelect !== 'function') {
+            normalized.onSelect = normalized.onDateSelect;
+        }
+        if (typeof normalized.onTimeChange === 'function' && typeof normalized.onChange !== 'function') {
+            normalized.onChange = normalized.onTimeChange;
+        }
+
+        return normalized;
+    }
+
+    static defaultTheme = {
+        // Colors
+        primaryColor: '#0d6efd',
+        secondaryColor: '#6c757d',
+        dangerColor: '#dc3545',
+        successColor: '#198754',
+        warningColor: '#ffc107',
+        infoColor: '#0dcaf0',
+
+        // Background Colors
+        backgroundColor: 'white',
+        hoverColor: '#e0e0ff',
+        disabledColor: '#f1f1f1',
+        dowBackgroundColor: 'transparent',
+
+        // Text Colors
+        textColor: '#000',
+        textMuted: '#666',
+
+        // Border
+        borderColor: '#ccc',
+        borderWidth: '1px',
+        borderRadius: '0.25rem',
+        buttonBorderRadius: '0.25rem',
+
+        // Shadows
+        shadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    };
+
     constructor(element, options) {
+        options = DateTimePicker.normalizeOptions(options || {});
         const userLabels = options && typeof options.labels === 'object' ? options.labels : {};
 
         // Merge default settings with the provided options
@@ -231,6 +296,12 @@ class DateTimePicker {
         this.renderCalendar();
         this.bindEvents(element);
 
+        if (this.utcToggle) {
+            this.utcToggle.checked = !!this.settings.defaultToUTC;
+        }
+
+        this.syncSlidersFromDate();
+
         // Fix display for inline mode
         if (this.settings.mode === 'inline') {
             this.container.style.display = 'block';
@@ -243,6 +314,50 @@ class DateTimePicker {
         }
 
         this.toggleFeatures();
+        this.updateAllSliderValues();
+        this.updateSelectedDatetime();
+        this.applyThemeVariables();
+    }
+
+    applyThemeVariables() {
+        if (!this.datetimePicker) return;
+
+        // Apply themeVariables (raw CSS custom property overrides scoped to the picker)
+        if (this.settings.themeVariables && typeof this.settings.themeVariables === 'object') {
+            for (const [key, value] of Object.entries(this.settings.themeVariables)) {
+                if (typeof key === 'string' && key.startsWith('--')) {
+                    this.datetimePicker.style.setProperty(key, String(value));
+                }
+            }
+        }
+
+        // Map theme object properties to the CSS custom properties used by the stylesheet
+        if (this.settings.theme && typeof this.settings.theme === 'object') {
+            const theme = this.settings.theme;
+            const el = this.datetimePicker;
+            const map = {
+                primaryColor:           '--dtp-primary',
+                primaryHoverColor:      '--dtp-primary-hover',
+                primaryTextColor:       '--dtp-primary-text',
+                backgroundColor:        '--dtp-bg',
+                navBackgroundColor:     '--dtp-nav-bg',
+                hoverColor:             '--dtp-hover-bg',
+                headerBackgroundColor:  '--dtp-header-bg',
+                headerTextColor:        '--dtp-header-text',
+                textColor:              '--dtp-text',
+                textMuted:              '--dtp-text-muted',
+                borderColor:            '--dtp-border',
+                borderLightColor:       '--dtp-border-light',
+                todayBorderColor:       '--dtp-today-border',
+                sliderTrackColor:       '--dtp-slider-track',
+                sliderThumbColor:       '--dtp-slider-thumb',
+                width:                  '--dtp-width',
+                cellSize:               '--dtp-cell-size',
+            };
+            for (const [prop, cssVar] of Object.entries(map)) {
+                if (theme[prop]) el.style.setProperty(cssVar, theme[prop]);
+            }
+        }
     }
 
     createPicker(element) {
@@ -257,8 +372,10 @@ class DateTimePicker {
         container.innerHTML = `
         <div class="${pickerClass}" role="dialog" aria-hidden="true">
             ${this.getControlsHTML()}
-            ${this.getDOWHTML()}
-            ${this.getCalendarHTML()}
+            <div class="dtp-calendar-section">
+                ${this.getDOWHTML()}
+                ${this.getCalendarHTML()}
+            </div>
             ${this.getSelectedTimeHTML()}
             ${this.getSlidersHTML()}
             ${this.getTogglesHTML()}
@@ -274,20 +391,14 @@ class DateTimePicker {
     }
 
     getControlsHTML() {
-        const btnClass = this.settings.useBootstrap ? 'btn btn-primary' : 'btn';
-        const selectClass = this.settings.useBootstrap ? 'form-select pe-4 my-1' : '';
         return `
-    <div class="calendar-controls mb-3 d-flex align-items-center justify-content-between">
-        <button type="button" class="${btnClass} me-2" id="prev-month" aria-label="${this.getLabel('prevMonth', 'Previous Month')}">
-            <span>&lt;</span>
-        </button>
-        <div class="input-group">
-            <select id="monthSelect" class="${selectClass}" aria-label="${this.getLabel('selectMonth', 'Select Month')}"></select>
-            <select id="yearSelect" class="${selectClass}" aria-label="${this.getLabel('selectYear', 'Select Year')}"></select>
+    <div class="dtp-nav-section">
+        <button type="button" class="dtp-nav-btn dtp-prev" id="prev-month" aria-label="${this.getLabel('prevMonth', 'Previous Month')}">&#9664;</button>
+        <div class="dtp-month-year">
+            <select id="monthSelect" class="dtp-select" aria-label="${this.getLabel('selectMonth', 'Select Month')}"></select>
+            <select id="yearSelect" class="dtp-select" aria-label="${this.getLabel('selectYear', 'Select Year')}"></select>
         </div>
-        <button type="button" class="${btnClass} ms-2" id="next-month" aria-label="${this.getLabel('nextMonth', 'Next Month')}">
-            <span>&gt;</span>
-        </button>
+        <button type="button" class="dtp-nav-btn dtp-next" id="next-month" aria-label="${this.getLabel('nextMonth', 'Next Month')}">&#9654;</button>
     </div>
     `;
     }
@@ -307,10 +418,7 @@ class DateTimePicker {
         for (const day of rotatedDays) {
             const dowCell = document.createElement('div');
             dowCell.textContent = day;
-            dowCell.classList.add('dow-cell');
-            if (this.settings.useBootstrap) {
-                dowCell.classList.add('fw-bold');
-            }
+            dowCell.classList.add('dow-cell', 'day-name');
             dowDiv.appendChild(dowCell);
         }
 
@@ -366,15 +474,15 @@ class DateTimePicker {
     }
 
     getCalendarHTML() {
-        return `<div id="calendar" class="calendar mb-3" role="grid" aria-label="Calendar"></div>`;
+        return `<div id="calendar" class="calendar dtp-calendar" role="grid" aria-label="Calendar"></div>`;
     }
 
     getSelectedTimeHTML() {
         const label = this.getDatetimeLabel();
         return this.settings.showSelectedDatetime
-            ? `<div class="d-flex flex-row justify-content-between mb-1">
+            ? `<div class="d-flex flex-row justify-content-between mb-1 dtp-selected-row">
                 ${label ? `<label for="selected-datetime">${label}:</label>` : '<span></span>'}
-                <input id="selected-datetime" class="text-end" aria-live="polite" aria-readonly="true" readonly disabled aria-disabled="true">
+                <input id="selected-datetime" class="text-end dtp-selected-datetime" aria-live="polite" aria-readonly="true" readonly disabled aria-disabled="true">
             </div>`
             : '';
     }
@@ -424,7 +532,7 @@ class DateTimePicker {
     }
 
     getSlidersHTML() {
-        const sliderContainerClass = this.settings.useBootstrap ? 'slider-container mb-3' : 'slider-container';
+        const sliderContainerClass = 'slider-container sliders-container';
         const sliders = this.settings.sliders.map(slider => {
             switch (slider) {
                 case 'hours':       return this.getSliderHTML('hours',       this.getSliderLabel('hours'),       0, 23);
@@ -439,12 +547,14 @@ class DateTimePicker {
     }
 
     getSliderHTML(id, label, min, max) {
-        const labelClass = this.settings.useBootstrap ? 'form-label me-2' : '';
-        const inputClass = this.settings.useBootstrap ? 'form-range w-50 ms-auto' : '';
+        const valueMarkup = this.settings.showSliderValues
+            ? `<span class="slider-value dtp-slider-value" id="${id}-value">0</span>`
+            : '';
         return `
-                <div class="d-flex flex-row align-items-center">
-                        <label for="${id}" class="${labelClass}">${label}:</label>
-                        <input type="range" id="${id}" value="0" min="${min}" max="${max}" step="1" class="${inputClass}" aria-label="${label}">
+                <div class="d-flex flex-row align-items-center mb-1 dtp-slider-row${this.settings.showSliderValues ? '' : ' dtp-slider-row--no-value'}">
+                        <label class="dtp-slider-label" for="${id}">${label}:</label>
+                        <input type="range" id="${id}" value="0" min="${min}" max="${max}" step="1" aria-label="${label}">
+                        ${valueMarkup}
                 </div>
             `;
     }
@@ -456,7 +566,7 @@ class DateTimePicker {
         const localLabel = this.getLocalizedLocalLabel();
         const utcLabel = this.getLocalizedUTCLabel();
         return `
-                <div class="toggle-container justify-content-between w-100">
+                <div class="toggle-container justify-content-between w-100 dtp-toggle-container">
                     <div class="${formCheckClass}">
                         <input type="checkbox" id="utc-toggle" class="${inputClass}" aria-label="${this.getLabel('toggleUtc', 'Toggle UTC Time')}">
                         <label for="utc-toggle" class="${labelClass}" id="utc-toggle-label">${localLabel}/${utcLabel}</label>
@@ -505,7 +615,7 @@ class DateTimePicker {
             ? `<button type="button" class="${closeBtnClass}" id="close-button" aria-label="${closeLabel}">${closeLabel}</button>`
             : '';
         return `
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center dtp-footer">
             ${nowButtonHTML}
             ${closeButtonHTML}
         </div>
@@ -554,6 +664,10 @@ class DateTimePicker {
         this.minutesSlider     = this.settings.sliders.includes('minutes')     ? container.querySelector('#minutes')     : null;
         this.secondsSlider     = this.settings.sliders.includes('seconds')     ? container.querySelector('#seconds')     : null;
         this.nanosecondsSlider = this.settings.sliders.includes('nanoseconds') ? container.querySelector('#nanoseconds') : null;
+        this.hoursValue        = container.querySelector('#hours-value');
+        this.minutesValue      = container.querySelector('#minutes-value');
+        this.secondsValue      = container.querySelector('#seconds-value');
+        this.nanosecondsValue  = container.querySelector('#nanoseconds-value');
 
         this.utcToggle       = container.querySelector('#utc-toggle');
         this.dowDiv          = container.querySelector('#days-of-week');
@@ -576,12 +690,13 @@ class DateTimePicker {
         prevMonthButton.addEventListener('click', () => this.changeMonth(-1));
         nextMonthButton.addEventListener('click', () => this.changeMonth(1));
 
-        if (this.hoursSlider)       this.hoursSlider.addEventListener('input',       () => this.updateSelectedDatetime());
-        if (this.minutesSlider)     this.minutesSlider.addEventListener('input',     () => this.updateSelectedDatetime());
-        if (this.secondsSlider)     this.secondsSlider.addEventListener('input',     () => this.updateSelectedDatetime());
-        if (this.nanosecondsSlider) this.nanosecondsSlider.addEventListener('input', () => this.updateSelectedDatetime());
+        if (this.hoursSlider)       this.hoursSlider.addEventListener('input',       () => this.handleSliderInput('hours'));
+        if (this.minutesSlider)     this.minutesSlider.addEventListener('input',     () => this.handleSliderInput('minutes'));
+        if (this.secondsSlider)     this.secondsSlider.addEventListener('input',     () => this.handleSliderInput('seconds'));
+        if (this.nanosecondsSlider) this.nanosecondsSlider.addEventListener('input', () => this.handleSliderInput('nanoseconds'));
 
         this.utcToggle.addEventListener('change', () => {
+            this.syncSlidersFromDate();
             this.updateSelectedDatetime();
             this.updateUtcToggleLabel();
         });
@@ -677,16 +792,13 @@ class DateTimePicker {
         }
 
         this.selectedDate = new Date(parsed);
-
-        if (this.hoursSlider) this.hoursSlider.value = this.selectedDate.getHours();
-        if (this.minutesSlider) this.minutesSlider.value = this.selectedDate.getMinutes();
-        if (this.secondsSlider) this.secondsSlider.value = this.selectedDate.getSeconds();
-        if (this.nanosecondsSlider) this.nanosecondsSlider.value = this.selectedDate.getMilliseconds() * 1e6;
+        this.syncSlidersFromDate();
 
         this.monthSelect.value = this.selectedDate.getMonth();
         this.yearSelect.value = this.selectedDate.getFullYear();
         this.renderCalendar();
         this.updateSelectedDatetime();
+        this.updateAllSliderValues();
     }
 
     positionPicker(trigger) {
@@ -738,14 +850,29 @@ class DateTimePicker {
         this.calendar.appendChild(fragment);
     }
 
+    syncSlidersFromDate(date = this.selectedDate) {
+        if (!(date instanceof Date) || isNaN(date.getTime())) return;
+
+        const useUTC = this.utcToggle ? this.utcToggle.checked : !!this.settings.defaultToUTC;
+        if (this.hoursSlider) {
+            this.hoursSlider.value = useUTC ? date.getUTCHours() : date.getHours();
+        }
+        if (this.minutesSlider) {
+            this.minutesSlider.value = useUTC ? date.getUTCMinutes() : date.getMinutes();
+        }
+        if (this.secondsSlider) {
+            this.secondsSlider.value = useUTC ? date.getUTCSeconds() : date.getSeconds();
+        }
+        if (this.nanosecondsSlider) {
+            this.nanosecondsSlider.value = date.getMilliseconds() * 1e6;
+        }
+    }
+
     createDayCell(date, day) {
         const cell = document.createElement('div');
         cell.classList.add('day-cell');
         cell.setAttribute('role', 'gridcell');
 
-        if (this.settings.useBootstrap) {
-            cell.classList.add('btn', 'btn-outline-secondary', 'p-1', 'm-1');
-        }
 
         const isSelected = this.isSameDate(date, this.selectedDate);
         const isDisabled = this.isDateDisabled(date);
@@ -756,7 +883,6 @@ class DateTimePicker {
 
         if (isSelected) {
             cell.classList.add('selected');
-            if (this.settings.useBootstrap) cell.classList.add('btn-primary');
             cell.setAttribute('aria-selected', 'true');
         } else {
             cell.setAttribute('aria-selected', 'false');
@@ -836,18 +962,28 @@ class DateTimePicker {
     updateSelectedDatetime() {
         const date = new Date(this.selectedDate);
 
-        if (this.hoursSlider)       date.setHours(this.hoursSlider.value);
-        if (this.minutesSlider)     date.setMinutes(this.minutesSlider.value);
-        if (this.secondsSlider)     date.setSeconds(this.secondsSlider.value);
-        if (this.nanosecondsSlider) date.setMilliseconds(this.nanosecondsSlider.value / 1e6);
+        const useUTC = this.utcToggle ? this.utcToggle.checked : !!this.settings.defaultToUTC;
+        if (useUTC) {
+            if (this.hoursSlider)       date.setUTCHours(this.hoursSlider.value);
+            if (this.minutesSlider)     date.setUTCMinutes(this.minutesSlider.value);
+            if (this.secondsSlider)     date.setUTCSeconds(this.secondsSlider.value);
+            if (this.nanosecondsSlider) date.setUTCMilliseconds(this.nanosecondsSlider.value / 1e6);
+        } else {
+            if (this.hoursSlider)       date.setHours(this.hoursSlider.value);
+            if (this.minutesSlider)     date.setMinutes(this.minutesSlider.value);
+            if (this.secondsSlider)     date.setSeconds(this.secondsSlider.value);
+            if (this.nanosecondsSlider) date.setMilliseconds(this.nanosecondsSlider.value / 1e6);
+        }
 
-        const datetimeString = this.utcToggle.checked
+        const datetimeString = useUTC
             ? date.toISOString()
             : (this.settings.dateTimeFormat
                 ? date.toLocaleString(this.settings.language, this.settings.dateTimeFormat)
                 : date.toLocaleString(this.settings.language));
 
-        if (this.settings.showSelectedDatetime) {
+        this.selectedDate = new Date(date);
+
+        if (this.settings.showSelectedDatetime && this.selectedDatetime) {
             this.selectedDatetime.value = datetimeString;
         }
 
@@ -858,11 +994,12 @@ class DateTimePicker {
         }
 
         if (this.settings.onChange) this.settings.onChange(date);
+        this.updateAllSliderValues();
     }
 
     updateUtcToggleLabel() {
         const label = this.container.querySelector('#utc-toggle-label');
-        if (!label) return;
+        if (!label || !this.utcToggle) return;
         const localLabel = this.getLocalizedLocalLabel();
         const utcLabel   = this.getLocalizedUTCLabel();
         label.textContent = this.utcToggle.checked
@@ -873,9 +1010,28 @@ class DateTimePicker {
     toggleFeatures() {
         if (!this.settings.showCalendar)    this.calendar.style.display = 'none';
         if (!this.settings.showDaysOfWeek)  this.dowDiv.style.display = 'none';
-        if (!this.settings.showSliders)     this.container.querySelector('.slider-container').style.display = 'none';
-        if (!this.settings.showUtcToggle)   this.utcToggle.parentElement.style.display = 'none';
-        if (!this.settings.showDoyToggle)   this.doyToggle.parentElement.style.display = 'none';
+        const sliderContainer = this.container.querySelector('.slider-container');
+        if (!this.settings.showSliders && sliderContainer) sliderContainer.style.display = 'none';
+
+        if (!this.settings.showUtcToggle && this.utcToggle && this.utcToggle.parentElement) {
+            this.utcToggle.parentElement.style.display = 'none';
+        }
+        if (!this.settings.showDoyToggle && this.doyToggle && this.doyToggle.parentElement) {
+            this.doyToggle.parentElement.style.display = 'none';
+        }
+        // Hide entire toggle container if both are off
+        if (!this.settings.showUtcToggle && !this.settings.showDoyToggle) {
+            const toggleContainer = this.container.querySelector('.toggle-container');
+            if (toggleContainer) toggleContainer.style.display = 'none';
+        }
+
+        // Hide the selected-datetime row when showSelectedDatetime is false
+        if (!this.settings.showSelectedDatetime) {
+            const dtInput = this.container.querySelector('#selected-datetime');
+            if (dtInput && dtInput.closest('.d-flex')) {
+                dtInput.closest('.d-flex').style.display = 'none';
+            }
+        }
     }
 
     isSameDate(date1, date2) {
@@ -885,4 +1041,128 @@ class DateTimePicker {
             date1.getDate()     === date2.getDate()
         );
     }
+
+    handleSliderInput(type) {
+        this.updateSliderValue(type);
+        this.updateSelectedDatetime();
+    }
+
+    updateSliderValue(type) {
+        const slider = this[`${type}Slider`];
+        const valueEl = this[`${type}Value`];
+        if (!slider || !valueEl) return;
+
+        const value = Number(slider.value);
+        valueEl.textContent = type === 'nanoseconds'
+            ? String(value).padStart(9, '0')
+            : String(value).padStart(2, '0');
+    }
+
+    updateAllSliderValues() {
+        ['hours', 'minutes', 'seconds', 'nanoseconds'].forEach((type) => this.updateSliderValue(type));
+    }
+
+    getSelectedDate() {
+        return new Date(this.selectedDate);
+    }
+
+    setDate(date) {
+        const parsed = this.parseDateLike(date);
+        if (!parsed) return false;
+
+        this.selectedDate = new Date(parsed);
+        this.syncSlidersFromDate();
+
+        this.monthSelect.value = this.selectedDate.getMonth();
+        this.yearSelect.value = this.selectedDate.getFullYear();
+        this.renderCalendar();
+        this.updateSelectedDatetime();
+        return true;
+    }
+
+    destroy() {
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
+        if (this.triggerElement && this.triggerElement.dataset) {
+            this.triggerElement.dataset.datepickerInitialized = '';
+        }
+    }
 }
+
+(function registerDateTimePickerHelpers() {
+    if (typeof window === 'undefined') return;
+
+    window.DateTimePickers = window.DateTimePickers || {};
+
+    window.initDateTimePickers = function initDateTimePickers(customOptions) {
+        const options = DateTimePicker.normalizeOptions(customOptions || {});
+        const elements = document.querySelectorAll('.datepick');
+
+        elements.forEach((element) => {
+            if (element.dataset.datepickerInitialized) return;
+
+            const elementId = element.id;
+            if (!elementId) {
+                console.warn('DateTimePicker: Element with class "datepick" has no ID, skipping:', element);
+                return;
+            }
+
+            const pickerOptions = { ...options };
+            const initialValue = element.value || element.dataset.initialValue;
+            if (initialValue) {
+                pickerOptions.initialValue = initialValue;
+            }
+
+            const dispatchInput = () => {
+                if (window.DateTimePickers[elementId]) {
+                    element.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            };
+            if (typeof pickerOptions.onSelect !== 'function') pickerOptions.onSelect = dispatchInput;
+            if (typeof pickerOptions.onChange !== 'function') pickerOptions.onChange = dispatchInput;
+
+            window.DateTimePickers[elementId] = new DateTimePicker(element, pickerOptions);
+            element.dataset.datepickerInitialized = 'true';
+        });
+    };
+
+    window.getDateTimePicker = function getDateTimePicker(id) {
+        return window.DateTimePickers[id] || null;
+    };
+
+    window.copyDateTime = function copyDateTime(fromId, toId, callback) {
+        const fromPicker = window.getDateTimePicker(fromId);
+        const toPicker = window.getDateTimePicker(toId);
+        if (!fromPicker || !toPicker) {
+            return false;
+        }
+
+        toPicker.setDate(fromPicker.getSelectedDate());
+        const toElement = document.getElementById(toId);
+        if (toElement) {
+            toElement.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        if (typeof callback === 'function') callback();
+        return true;
+    };
+
+    window.destroyDateTimePicker = function destroyDateTimePicker(id) {
+        const picker = window.DateTimePickers[id];
+        if (!picker) return;
+        picker.destroy();
+        delete window.DateTimePickers[id];
+    };
+
+    window.reinitDateTimePicker = function reinitDateTimePicker(id, options) {
+        window.destroyDateTimePicker(id);
+        const element = document.getElementById(id);
+        if (!element) return;
+        element.classList.add('datepick');
+        window.initDateTimePickers(options || {});
+    };
+
+    // Explicit init only. Call window.initDateTimePickers(options) when you want
+    // automatic wiring for .datepick elements in a specific context.
+})();
