@@ -451,18 +451,33 @@ class DateTimePicker {
     }
 
     populateYearDropdown() {
+        const currentYear = this.selectedDate.getFullYear();
         if (typeof this._yearRangeStart !== 'number' || typeof this._yearRangeEnd !== 'number') {
-            const currentYear = this.selectedDate.getFullYear();
             const range = 20;
             this._yearRangeStart = currentYear - Math.floor(range / 2);
             this._yearRangeEnd = currentYear + Math.floor(range / 2);
         }
 
-        this.renderYearOptions(this.selectedDate.getFullYear());
+        this.ensureYearInRange(currentYear);
+        this.renderYearOptions(currentYear);
 
         if (!this._yearDropdownListenerAttached) {
             this.yearSelect.addEventListener('change', (e) => this.handleYearSelection(e));
             this._yearDropdownListenerAttached = true;
+        }
+    }
+
+    ensureYearInRange(year) {
+        if (!Number.isInteger(year)) return;
+
+        const range = 20;
+        while (year > this._yearRangeEnd) {
+            this._yearRangeStart += range;
+            this._yearRangeEnd += range;
+        }
+        while (year < this._yearRangeStart) {
+            this._yearRangeStart -= range;
+            this._yearRangeEnd -= range;
         }
     }
 
@@ -772,6 +787,7 @@ class DateTimePicker {
 
     changeMonth(delta) {
         this.selectedDate.setMonth(this.selectedDate.getMonth() + delta);
+        this.populateYearDropdown();
         this.monthSelect.value = this.selectedDate.getMonth();
         this.yearSelect.value  = this.selectedDate.getFullYear();
         this.renderCalendar();
@@ -820,6 +836,7 @@ class DateTimePicker {
 
         this.selectedDate = new Date(parsed);
         this.syncSlidersFromDate();
+        this.populateYearDropdown();
 
         this.monthSelect.value = this.selectedDate.getMonth();
         this.yearSelect.value = this.selectedDate.getFullYear();
@@ -981,6 +998,7 @@ class DateTimePicker {
     updateCalendarDate() {
         const year  = parseInt(this.yearSelect.value, 10);
         const month = parseInt(this.monthSelect.value, 10);
+        if (Number.isNaN(year) || Number.isNaN(month)) return;
         this.selectedDate.setFullYear(year, month);
         this.renderCalendar();
         this.updateSelectedDatetime();
@@ -1099,6 +1117,7 @@ class DateTimePicker {
 
         this.selectedDate = new Date(parsed);
         this.syncSlidersFromDate();
+        this.populateYearDropdown();
 
         this.monthSelect.value = this.selectedDate.getMonth();
         this.yearSelect.value = this.selectedDate.getFullYear();
