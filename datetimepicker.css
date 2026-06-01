@@ -1,419 +1,515 @@
-/* Theme CSS Custom Properties */
+/**
+ * DateTimePicker Stylesheet
+ *
+ */
 :root {
-    /* Colors */
-    --dtp-primary-color: #0d6efd;
-    --dtp-secondary-color: #6c757d;
-    --dtp-danger-color: #dc3545;
-    --dtp-success-color: #198754;
-    --dtp-warning-color: #ffc107;
-    --dtp-info-color: #0dcaf0;
+    /* Primary Colors */
+    --dtp-primary: #000000;           /* Selected day, nav-btn hover fill */
+    --dtp-primary-hover: #222222;     /* Selected day hover */
+    --dtp-primary-text: #ffffff;      /* Text on primary color */
 
     /* Background Colors */
-    --dtp-bg-color: white;
-    --dtp-bg-hover: #e0e0ff;
-    --dtp-bg-disabled: #f1f1f1;
-    --dtp-dow-bg-color: transparent;
+    --dtp-bg: #ffffff;                /* Main background */
+    --dtp-nav-bg: #f2f4f6;            /* Month/year nav section */
+    --dtp-calendar-section-bg: #ffffff; /* Calendar section */
+    --dtp-sliders-bg: #f8f9fa;        /* Sliders section */
+    --dtp-header-bg: #000000;         /* Days of week header background */
+    --dtp-hover-bg: #e8e8e8;          /* Day cell hover */
+
+    /* Border Colors */
+    --dtp-border: #cccccc;            /* Main border */
+    --dtp-border-light: #dddddd;      /* Inner borders */
 
     /* Text Colors */
-    --dtp-text-color: #000;
-    --dtp-text-muted: #666;
-    --dtp-dow-text-color: var(--dtp-text-muted);
+    --dtp-text: #333333;              /* Main text */
+    --dtp-text-muted: #666666;        /* Secondary text */
+    --dtp-header-text: #ffffff;       /* Days of week header text */
 
-    /* Border */
-    --dtp-border-color: #ccc;
-    --dtp-border-width: 1px;
-    --dtp-border-radius: 0.25rem;
-    --dtp-button-border-radius: 0.25rem;
-    --dtp-width: max-content;
-    --dtp-nav-btn-bg: var(--dtp-primary-color);
-    --dtp-nav-btn-color: #fff;
-    --dtp-nav-btn-border: var(--dtp-primary-color);
-    --dtp-nav-btn-hover-bg: var(--dtp-primary-color);
-    --dtp-nav-btn-hover-color: #fff;
-    --dtp-nav-btn-hover-border: var(--dtp-primary-color);
-    --dtp-nav-btn-padding: 0.35rem 0.75rem;
-    --dtp-nav-btn-radius: var(--dtp-button-border-radius);
-    --dtp-nav-btn-min-width: 0;
-    --dtp-nav-btn-min-height: 0;
+    /* Today Indicator */
+    --dtp-today-border: #000000;      /* Border around today */
 
-    /* Shadows */
-    --dtp-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    /* Slider Colors */
+    --dtp-slider-track: #dddddd;      /* Slider track */
+    --dtp-slider-thumb: #000000;      /* Slider handle */
 
-    /* Spacing */
-    --dtp-padding: 10px;
+    /* Sizing */
+    --dtp-width: 260px;               /* Picker width */
+    --dtp-cell-size: 32px;            /* Day cell size */
 }
 
-/* Dark mode theme */
-[data-bs-theme="dark"] {
-    --dtp-bg-color: #222;
-    --dtp-bg-hover: #444;
-    --dtp-bg-disabled: #333;
-    --dtp-dow-bg-color: transparent;
-    --dtp-text-color: #f1f1f1;
-    --dtp-text-muted: #aaa;
-    --dtp-border-color: #444;
+/* Theme presets (opt-in via JS option: themeClass) */
+.datetime-picker.dtp-theme-black-white,
+.datetime-picker.dtp-theme-legacy {
+    --dtp-primary: #000000;
+    --dtp-primary-hover: #222222;
+    --dtp-primary-text: #ffffff;
+    --dtp-bg: #ffffff;
+    --dtp-nav-bg: #f2f4f6;
+    --dtp-calendar-section-bg: #ffffff;
+    --dtp-sliders-bg: #f8f9fa;
+    --dtp-header-bg: #000000;
+    --dtp-hover-bg: #e8e8e8;
+    --dtp-border: #cccccc;
+    --dtp-border-light: #dddddd;
+    --dtp-text: #333333;
+    --dtp-text-muted: #666666;
+    --dtp-header-text: #ffffff;
+    --dtp-today-border: #000000;
+    --dtp-slider-track: #dddddd;
+    --dtp-slider-thumb: #000000;
 }
 
-/* Initially hidden picker */
+.datetime-picker.dtp-theme-bootstrap {
+    --dtp-primary: #0d6efd;
+    --dtp-primary-hover: #0b5ed7;
+    --dtp-primary-text: #ffffff;
+    --dtp-bg: #ffffff;
+    --dtp-nav-bg: #f8f9fa;
+    --dtp-calendar-section-bg: #ffffff;
+    --dtp-sliders-bg: #f8f9fa;
+    --dtp-header-bg: #0d6efd;
+    --dtp-hover-bg: #e9ecef;
+    --dtp-border: #dee2e6;
+    --dtp-border-light: #dee2e6;
+    --dtp-text: #212529;
+    --dtp-text-muted: #6c757d;
+    --dtp-header-text: #ffffff;
+    --dtp-today-border: #0d6efd;
+    --dtp-slider-track: #dee2e6;
+    --dtp-slider-thumb: #0d6efd;
+}
+
+/* ==================== MAIN CONTAINER ==================== */
+.datetime-picker-container,
+.datetime-container {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 14px;
+    color: var(--dtp-text);
+}
+
 .datetime-picker {
-    display: none;
-    position: absolute;
-    z-index: 1000;
-    background: var(--dtp-bg-color);
-    border: var(--dtp-border-width) solid var(--dtp-border-color);
-    box-shadow: var(--dtp-shadow);
-    padding: var(--dtp-padding);
-    /*min-width: 250px;*/
+    background: var(--dtp-bg);
+    border: 1px solid var(--dtp-border);
+    border-radius: 4px;
+    padding: 0 !important;  /* override Bootstrap p-3 if present; sections handle their own padding */
     width: var(--dtp-width);
-    color: var(--dtp-text-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-sizing: border-box;
+    overflow: hidden; /* clip section backgrounds to rounded corners */
 }
 
-.datetime-picker.border {
-    border: var(--dtp-border-width) solid var(--dtp-border-color);
-}
-
-.datetime-picker.rounded {
-    border-radius: var(--dtp-border-radius);
-}
-
-.datetime-picker.shadow {
-    box-shadow: var(--dtp-shadow);
-}
-
-.datetime-picker.p-3 {
-    padding: var(--dtp-padding);
-}
-
-.datetime-picker.bg-white,
-.datetime-picker.bg-body {
-    background: var(--dtp-bg-color);
-}
-
-/* Show picker when certain conditions are met (e.g., when toggle is active) */
-.datetime-container.show-picker .datetime-picker {
-    display: block;
-}
-
-/* Hide the .datetime-container when .datetime-picker is hidden */
-.datetime-container .datetime-picker[style*="display: none"] {
-    display: none;
-}
-
-.datetime-container .datetime-picker[style*="display: block"] {
-    display: block;
-}
-
-/* If datetime-picker is hidden, hide the .datetime-container */
-.datetime-container .datetime-picker[style*="display: none"]:not([style="display: block"]) {
-    display: none;
-}
-
-/* Calendar */
-.calendar-controls,
+/* ==================== NAVIGATION SECTION ==================== */
 .dtp-nav-section {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 6px;
+    padding: 8px 10px;
+    background: var(--dtp-nav-bg);
+    border-bottom: 1px solid var(--dtp-border-light);
 }
 
+/* Circular prev/next buttons */
+.dtp-nav-btn {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border: 1.5px solid var(--dtp-border);
+    border-radius: 50%;
+    background: var(--dtp-bg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.dtp-nav-btn:hover {
+    background: var(--dtp-primary);
+    border-color: var(--dtp-primary);
+}
+
+/* CSS-only chevron arrows via pseudo-element */
+.dtp-nav-btn::before {
+    content: '';
+    display: block;
+    width: 7px;
+    height: 7px;
+    border-top: 2px solid var(--dtp-text);
+    border-right: 2px solid var(--dtp-text);
+    transition: border-color 0.15s;
+}
+
+.dtp-nav-btn:hover::before {
+    border-color: var(--dtp-primary-text);
+}
+
+/* Point left */
+.dtp-prev::before {
+    transform: rotate(-135deg);
+    margin-left: 2px; /* optical center */
+}
+
+/* Point right */
+.dtp-next::before {
+    transform: rotate(45deg);
+    margin-right: 2px; /* optical center */
+}
+
+/* Month + Year selects — equal width */
 .dtp-month-year {
     display: flex;
-    gap: 0.35rem;
     flex: 1;
+    gap: 4px;
+    min-width: 0;
 }
 
-.dtp-nav-btn {
-    min-width: 2rem;
-    min-height: 2rem;
-    line-height: 1;
-}
-
-.calendar-controls select,
-.dtp-select,
-.day-cell,
-.datetime-container input[type="text"] {
-    font-size: 0.875rem;
-    padding: 0.2rem;
-    border: var(--dtp-border-width) solid var(--dtp-border-color);
-    border-radius: var(--dtp-border-radius);
-    transition: background-color 0.2s ease;
-    background-color: var(--dtp-bg-color);
-    color: var(--dtp-text-color);
-}
-
-.dtp-calendar {
-    margin-bottom: 1rem;
-}
-
-.calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-}
-
-.day-cell {
-    position: relative;
-    text-align: center;
+.dtp-nav-section #monthSelect,
+.dtp-nav-section #yearSelect {
+    flex: 1;
+    min-width: 0;
+    padding: 4px 6px;
+    border: 1px solid var(--dtp-border);
+    border-radius: 3px;
+    font-size: 13px;
+    background: var(--dtp-bg);
+    color: var(--dtp-text);
     cursor: pointer;
-    background-color: var(--dtp-bg-disabled);
-    border-radius: var(--dtp-button-border-radius);
-    transition: all 0.2s ease;
 }
 
-.day-cell:hover {
-    background-color: var(--dtp-bg-hover);
-    transform: scale(1.05);
-    border-radius: var(--dtp-button-border-radius);
+.dtp-nav-section #monthSelect:focus,
+.dtp-nav-section #yearSelect:focus {
+    outline: none;
+    border-color: var(--dtp-primary);
 }
 
-.day-cell.selected {
-    background-color: var(--dtp-primary-color);
-    color: white;
-    border-radius: var(--dtp-button-border-radius);
+/* ==================== CALENDAR SECTION ==================== */
+.dtp-calendar-section {
+    background: var(--dtp-calendar-section-bg);
+    padding-bottom: 2px; /* minimal — border-top on sliders handles the separator */
 }
 
-.day-cell.disabled {
-    cursor: not-allowed;
-    opacity: 0.45;
-    text-decoration: line-through;
-}
-
-.day-cell.disabled:hover {
-    background-color: var(--dtp-bg-disabled);
-    transform: none;
-}
-
-.day-cell.has-marker {
-    padding-bottom: 0.55rem;
-}
-
-.day-marker-dot {
-    position: absolute;
-    left: 50%;
-    bottom: 0.2rem;
-    width: 0.35rem;
-    height: 0.35rem;
-    transform: translateX(-50%);
-    border-radius: 999px;
-    background-color: var(--dtp-danger-color);
-}
-
-.dtp-marker-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem 0.6rem;
-    margin-top: 0.6rem;
-    font-size: 0.75rem;
-}
-
-.dtp-legend-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-}
-
-.dtp-legend-dot {
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 999px;
-    background-color: var(--dtp-danger-color);
-}
-
-#days-of-week {
+/* ==================== DAYS OF WEEK HEADER ==================== */
+.datetime-picker #days-of-week {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    background-color: var(--dtp-dow-bg-color);
-    padding: 0.25rem 0;
-    margin-bottom: 0.25rem;
-    border-radius: var(--dtp-border-radius);
+    background: var(--dtp-header-bg);
+    padding: 6px 0;
+    margin-bottom: 4px;
 }
 
-.dow-cell {
+.datetime-picker .day-name {
     text-align: center;
-    color: var(--dtp-dow-text-color);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--dtp-header-text);
+}
+
+/* ==================== CALENDAR GRID ==================== */
+.datetime-picker #calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    padding: 0 5px; /* slight inset so cells don't butt up against the edges */
+}
+
+.datetime-picker .day-cell {
+    height: var(--dtp-cell-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 13px;
+    color: var(--dtp-text);
+    transition: background-color 0.15s;
+}
+
+.datetime-picker .day-cell:hover {
+    background: var(--dtp-hover-bg);
+}
+
+.datetime-picker .day-cell.selected {
+    background: var(--dtp-primary);
+    color: var(--dtp-primary-text);
     font-weight: 600;
 }
 
-.dtp-selected-row,
-.dtp-slider-row,
-.dtp-toggle-container,
-.dtp-footer {
+.datetime-picker .day-cell.selected:hover {
+    background: var(--dtp-primary-hover);
+}
+
+.datetime-picker .day-cell.today {
+    border: 2px solid var(--dtp-today-border);
+}
+
+.datetime-picker .day-cell.today.selected {
+    border-color: var(--dtp-primary-text);
+}
+
+/* ==================== DATETIME DISPLAY ==================== */
+.datetime-picker .d-flex.flex-row.justify-content-between.mb-1 {
+    margin: 4px 10px 6px !important;
+}
+
+.datetime-picker label[for="selected-datetime"] {
+    display: none;
+}
+
+.datetime-picker #selected-datetime {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--dtp-border);
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 13px;
+    text-align: left;
+    background: var(--dtp-bg);
+    color: var(--dtp-text);
+    box-sizing: border-box;
+}
+
+.datetime-picker #selected-datetime:focus {
+    outline: none;
+    border-color: var(--dtp-primary);
+}
+
+/* ==================== TIME SECTION ==================== */
+.datetime-picker .sliders-container {
+    background: var(--dtp-sliders-bg);
+    border-top: 1px solid var(--dtp-border-light);
+    padding: 10px 10px 4px;
+    margin-top: 0;
+}
+
+/* Slider rows */
+.datetime-picker .d-flex.align-items-center.mb-1 {
+    display: grid;
+    grid-template-columns: 70px 1fr 35px;
+    align-items: center;
+    margin-bottom: 6px !important;
+    gap: 8px;
+}
+
+/* Last slider row — no bottom margin so it doesn't stack with container padding */
+.datetime-picker .sliders-container .d-flex.align-items-center:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Slider labels */
+.datetime-picker .d-flex.align-items-center.mb-1 > label {
+    font-size: 13px;
+    color: var(--dtp-text-muted);
+    text-align: left;
+}
+
+/* Slider value display */
+.datetime-picker .slider-value {
+    font-size: 12px;
+    color: var(--dtp-text-muted);
+    text-align: right;
+    font-family: monospace;
+}
+
+/* Slider styling */
+.datetime-picker input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--dtp-slider-track);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.datetime-picker input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--dtp-slider-thumb);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--dtp-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.datetime-picker input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--dtp-slider-thumb);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--dtp-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.datetime-picker input[type="range"]:hover::-webkit-slider-thumb {
+    transform: scale(1.1);
+}
+
+/* Nanoseconds input */
+.datetime-picker input[type="number"] {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid var(--dtp-border);
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+/* ==================== UTC / DOY TOGGLES ==================== */
+.datetime-picker .toggle-container {
+    background: var(--dtp-sliders-bg);
+    padding: 2px 10px 0;
+}
+
+.datetime-picker .form-check {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 6px;
+    margin-bottom: 8px;
+    padding-left: 0;
 }
 
-.dtp-selected-row {
+.datetime-picker .form-check-input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--dtp-primary);
+}
+
+.datetime-picker .form-check-label {
+    font-size: 13px;
+    color: var(--dtp-text-muted);
+    cursor: pointer;
+}
+
+/* ==================== FOOTER BUTTONS ==================== */
+.datetime-picker .dtp-footer {
+    display: flex;
     justify-content: space-between;
-    margin-bottom: 0.5rem;
+    align-items: center;
+    border-top: 1px solid var(--dtp-border-light);
+    padding: 10px;
+    margin-top: 0;
 }
 
-.dtp-selected-row label,
-.dtp-slider-label {
-    font-size: 0.85rem;
-    white-space: nowrap;
-}
-
-.dtp-selected-datetime {
-    text-align: right;
-    min-width: 11rem;
-    flex: 1;
-}
-
-.dtp-slider-row {
-    margin-bottom: 0.5rem;
-}
-
-.dtp-slider-row input[type="range"] {
-    flex: 1;
-}
-
-.dtp-slider-value {
-    min-width: 3.2rem;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
-
-.dtp-toggle-container {
-    justify-content: space-between;
-    width: 100%;
-    margin-bottom: 0.5rem;
-}
-
-.dtp-footer {
-    justify-content: space-between;
-}
-
-/* Sliders */
-.datetime-container input[type="range"] {
-    width: 100%;
-    appearance: none;
-    background-color: var(--dtp-border-color);
-    height: 0.25rem;
-    border-radius: 0.125rem;
-}
-
-/* Slider thumb styling */
-.datetime-container input[type="range"]::-webkit-slider-thumb {
-    appearance: none;
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 50%;
-    background: var(--dtp-primary-color);
+.datetime-picker #now-button,
+.datetime-picker #close-button {
+    padding: 6px 16px;
+    border: 1px solid var(--dtp-border);
+    border-radius: 3px;
+    font-size: 13px;
     cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    background: var(--dtp-bg);
+    color: var(--dtp-text);
+    transition: background-color 0.15s;
 }
 
-.datetime-container input[type="range"]::-moz-range-thumb {
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 50%;
-    background: var(--dtp-primary-color);
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+.datetime-picker #now-button:hover,
+.datetime-picker #close-button:hover {
+    background: var(--dtp-hover-bg);
 }
 
-/* Button styling with theme colors */
-.calendar-controls button,
-.dtp-nav-btn {
-    background-color: var(--dtp-nav-btn-bg) !important;
-    color: var(--dtp-nav-btn-color) !important;
-    border: 1px solid var(--dtp-nav-btn-border) !important;
-    border-radius: var(--dtp-nav-btn-radius);
-    padding: var(--dtp-nav-btn-padding);
-    min-width: var(--dtp-nav-btn-min-width);
-    min-height: var(--dtp-nav-btn-min-height);
-    cursor: pointer;
-    transition: all 0.2s ease;
+/* ==================== POSITIONING FOR INPUT/BUTTON MODE ==================== */
+.datetime-picker-container,
+.datetime-container {
+    position: relative;
 }
 
-.calendar-controls button:hover,
-.dtp-nav-btn:hover {
-    background-color: var(--dtp-nav-btn-hover-bg) !important;
-    color: var(--dtp-nav-btn-hover-color) !important;
-    border-color: var(--dtp-nav-btn-hover-border) !important;
-    opacity: 0.85;
-    transform: scale(1.05);
+.datetime-picker-container .datetime-picker,
+.datetime-container .datetime-picker {
+    position: absolute;
+    z-index: 1000;
+    margin-top: 4px;
 }
 
-#now-button,
-#close-button {
-    background-color: var(--dtp-secondary-color) !important;
-    border-color: var(--dtp-secondary-color) !important;
-    color: white !important;
-    padding: 0.5rem 1rem;
-    border-radius: var(--dtp-button-border-radius);
-    cursor: pointer;
-    transition: all 0.2s ease;
+/* Inline mode - static positioning */
+.datetime-picker-container .datetime-picker[style*="position: static"],
+.datetime-container .datetime-picker[style*="position: static"] {
+    position: static;
+    box-shadow: none;
 }
 
-.dtp-nav-btn:hover,
-#now-button:hover,
-#close-button:hover {
-    opacity: 0.85;
-}
-
-/* Mobile Responsiveness */
-@media (max-width: 400px) {
-    .datetime-picker {
-        padding: 0.5rem;
-    }
-
-    .calendar-controls select,
-    .dtp-select,
-    .day-cell,
-    .time-display {
-        font-size: 0.75rem;
-    }
-
-    .slider-container label {
-        font-size: 0.75rem;
+/* ==================== DARK MODE (optional) ==================== */
+/*
+@media (prefers-color-scheme: dark) {
+    :root {
+        --dtp-bg: #2d2d2d;
+        --dtp-nav-bg: #252525;
+        --dtp-calendar-section-bg: #2d2d2d;
+        --dtp-sliders-bg: #252525;
+        --dtp-header-bg: #383838;
+        --dtp-hover-bg: #404040;
+        --dtp-border: #555555;
+        --dtp-border-light: #444444;
+        --dtp-text: #e0e0e0;
+        --dtp-text-muted: #aaaaaa;
+        --dtp-header-text: #e0e0e0;
+        --dtp-slider-track: #555555;
     }
 }
+*/
 
-/* Dark mode support for Bootstrap 5.3 color modes */
-[data-bs-theme="dark"] .datetime-picker,
-[data-bs-theme="dark"] .picker-box,
-[data-bs-theme="dark"] .calendar-controls select,
-[data-bs-theme="dark"] .dtp-select,
-[data-bs-theme="dark"] .day-cell,
-[data-bs-theme="dark"] .datetime-container input[type="text"] {
-    background-color: var(--dtp-bg-color) !important;
-    color: var(--dtp-text-color) !important;
-    border-color: var(--dtp-border-color) !important;
-}
+/* ==================== THEME PRESETS ==================== */
+/*
+   Copy one of these blocks into your own stylesheet to change themes.
+   The three section-background vars (--dtp-nav-bg, --dtp-calendar-section-bg,
+   --dtp-sliders-bg) can also be customized independently.
+*/
 
-[data-bs-theme="dark"] .calendar-controls select,
-[data-bs-theme="dark"] .dtp-select {
-    background-color: var(--dtp-bg-color) !important;
-    color: var(--dtp-text-color) !important;
-    border-color: var(--dtp-border-color) !important;
+/* GREEN THEME
+:root {
+    --dtp-primary: #28a745;
+    --dtp-primary-hover: #218838;
+    --dtp-today-border: #28a745;
+    --dtp-slider-thumb: #28a745;
 }
+*/
 
-[data-bs-theme="dark"] .day-cell {
-    background-color: var(--dtp-bg-disabled) !important;
-    color: var(--dtp-text-color) !important;
-    border-color: var(--dtp-border-color) !important;
+/* RED THEME
+:root {
+    --dtp-primary: #dc3545;
+    --dtp-primary-hover: #c82333;
+    --dtp-today-border: #dc3545;
+    --dtp-slider-thumb: #dc3545;
 }
+*/
 
-[data-bs-theme="dark"] .day-cell:hover {
-    background-color: var(--dtp-bg-hover) !important;
-    color: var(--dtp-text-color) !important;
+/* PURPLE THEME
+:root {
+    --dtp-primary: #6f42c1;
+    --dtp-primary-hover: #5a32a3;
+    --dtp-today-border: #6f42c1;
+    --dtp-slider-thumb: #6f42c1;
 }
+*/
 
-[data-bs-theme="dark"] .day-cell.selected {
-    background-color: var(--dtp-primary-color) !important;
-    color: #fff !important;
+/* ORANGE THEME
+:root {
+    --dtp-primary: #fd7e14;
+    --dtp-primary-hover: #e96b02;
+    --dtp-today-border: #fd7e14;
+    --dtp-slider-thumb: #fd7e14;
 }
+*/
 
-[data-bs-theme="dark"] .day-cell.disabled:hover {
-    background-color: var(--dtp-bg-disabled) !important;
-    transform: none;
+/* DARK MODE THEME
+:root {
+    --dtp-bg: #2d2d2d;
+    --dtp-nav-bg: #252525;
+    --dtp-calendar-section-bg: #2d2d2d;
+    --dtp-sliders-bg: #252525;
+    --dtp-header-bg: #1a1a1a;
+    --dtp-header-text: #ffffff;
+    --dtp-hover-bg: #404040;
+    --dtp-border: #555555;
+    --dtp-border-light: #444444;
+    --dtp-text: #e0e0e0;
+    --dtp-text-muted: #aaaaaa;
+    --dtp-slider-track: #555555;
 }
-
-[data-bs-theme="dark"] #days-of-week .dow-cell {
-    color: var(--dtp-text-color) !important;
-}
+*/

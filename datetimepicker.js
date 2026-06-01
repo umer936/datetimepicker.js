@@ -114,6 +114,8 @@ class DateTimePicker {
         hoverColor: '#e0e0ff',
         disabledColor: '#f1f1f1',
         dowBackgroundColor: 'transparent',
+        sliderTrackColor: '#dddddd',
+        sliderThumbColor: '#000000',
 
         // Text Colors
         textColor: '#000',
@@ -362,15 +364,12 @@ class DateTimePicker {
 
     createPicker(element) {
         const container = document.createElement('div');
-        container.classList.add('datetime-container');
+        // Keep legacy class and add the documented container class used by CSS.
+        container.classList.add('datetime-container', 'datetime-picker-container');
         container.style.display = 'none';
 
-        const pickerClass = this.settings.useBootstrap
-            ? 'datetime-picker border rounded shadow p-3 bg-body'
-            : 'datetime-picker border rounded shadow p-3 bg-white';
-
         container.innerHTML = `
-        <div class="${pickerClass}" role="dialog" aria-hidden="true">
+        <div class="datetime-picker border rounded shadow" role="dialog" aria-hidden="true">
             ${this.getControlsHTML()}
             <div class="dtp-calendar-section">
                 ${this.getDOWHTML()}
@@ -388,17 +387,37 @@ class DateTimePicker {
         }
 
         this.cacheElements(container);
+
+        const themeClasses = this.getThemeClasses();
+        if (themeClasses.length > 0 && this.datetimePicker) {
+            this.datetimePicker.classList.add(...themeClasses);
+        }
+    }
+
+    getThemeClasses() {
+        const raw = this.settings.themeClass;
+        if (!raw) return [];
+        if (Array.isArray(raw)) {
+            return raw
+                .map((item) => String(item || '').trim())
+                .filter((item) => item.length > 0);
+        }
+
+        return String(raw)
+            .split(/\s+/)
+            .map((item) => item.trim())
+            .filter((item) => item.length > 0);
     }
 
     getControlsHTML() {
         return `
     <div class="dtp-nav-section">
-        <button type="button" class="dtp-nav-btn dtp-prev" id="prev-month" aria-label="${this.getLabel('prevMonth', 'Previous Month')}">&#9664;</button>
+        <button type="button" class="dtp-nav-btn dtp-prev" id="prev-month" aria-label="${this.getLabel('prevMonth', 'Previous Month')}"></button>
         <div class="dtp-month-year">
-            <select id="monthSelect" class="dtp-select" aria-label="${this.getLabel('selectMonth', 'Select Month')}"></select>
-            <select id="yearSelect" class="dtp-select" aria-label="${this.getLabel('selectYear', 'Select Year')}"></select>
+            <select id="monthSelect" aria-label="${this.getLabel('selectMonth', 'Select Month')}"></select>
+            <select id="yearSelect" aria-label="${this.getLabel('selectYear', 'Select Year')}"></select>
         </div>
-        <button type="button" class="dtp-nav-btn dtp-next" id="next-month" aria-label="${this.getLabel('nextMonth', 'Next Month')}">&#9654;</button>
+        <button type="button" class="dtp-nav-btn dtp-next" id="next-month" aria-label="${this.getLabel('nextMonth', 'Next Month')}"></button>
     </div>
     `;
     }
@@ -474,7 +493,7 @@ class DateTimePicker {
     }
 
     getCalendarHTML() {
-        return `<div id="calendar" class="calendar dtp-calendar" role="grid" aria-label="Calendar"></div>`;
+        return `<div id="calendar" class="calendar dtp-calendar mb-3" role="grid" aria-label="Calendar"></div>`;
     }
 
     getSelectedTimeHTML() {
@@ -532,7 +551,7 @@ class DateTimePicker {
     }
 
     getSlidersHTML() {
-        const sliderContainerClass = 'slider-container sliders-container';
+        const sliderContainerClass = 'slider-container sliders-container mb-3';
         const sliders = this.settings.sliders.map(slider => {
             switch (slider) {
                 case 'hours':       return this.getSliderHTML('hours',       this.getSliderLabel('hours'),       0, 23);
@@ -551,8 +570,8 @@ class DateTimePicker {
             ? `<span class="slider-value dtp-slider-value" id="${id}-value">0</span>`
             : '';
         return `
-                <div class="d-flex flex-row align-items-center mb-1 dtp-slider-row${this.settings.showSliderValues ? '' : ' dtp-slider-row--no-value'}">
-                        <label class="dtp-slider-label" for="${id}">${label}:</label>
+                <div class="d-flex align-items-center mb-1 dtp-slider-row${this.settings.showSliderValues ? '' : ' dtp-slider-row--no-value'}">
+                        <label for="${id}">${label}:</label>
                         <input type="range" id="${id}" value="0" min="${min}" max="${max}" step="1" aria-label="${label}">
                         ${valueMarkup}
                 </div>
@@ -615,7 +634,7 @@ class DateTimePicker {
             ? `<button type="button" class="${closeBtnClass}" id="close-button" aria-label="${closeLabel}">${closeLabel}</button>`
             : '';
         return `
-        <div class="d-flex justify-content-between align-items-center dtp-footer">
+        <div class="dtp-footer">
             ${nowButtonHTML}
             ${closeButtonHTML}
         </div>
@@ -664,10 +683,12 @@ class DateTimePicker {
         this.minutesSlider     = this.settings.sliders.includes('minutes')     ? container.querySelector('#minutes')     : null;
         this.secondsSlider     = this.settings.sliders.includes('seconds')     ? container.querySelector('#seconds')     : null;
         this.nanosecondsSlider = this.settings.sliders.includes('nanoseconds') ? container.querySelector('#nanoseconds') : null;
-        this.hoursValue        = container.querySelector('#hours-value');
-        this.minutesValue      = container.querySelector('#minutes-value');
-        this.secondsValue      = container.querySelector('#seconds-value');
-        this.nanosecondsValue  = container.querySelector('#nanoseconds-value');
+        this.sliderValueElements = {
+            hours: container.querySelector('#hours-value'),
+            minutes: container.querySelector('#minutes-value'),
+            seconds: container.querySelector('#seconds-value'),
+            nanoseconds: container.querySelector('#nanoseconds-value'),
+        };
 
         this.utcToggle       = container.querySelector('#utc-toggle');
         this.dowDiv          = container.querySelector('#days-of-week');
@@ -1049,7 +1070,7 @@ class DateTimePicker {
 
     updateSliderValue(type) {
         const slider = this[`${type}Slider`];
-        const valueEl = this[`${type}Value`];
+        const valueEl = this.sliderValueElements && this.sliderValueElements[type];
         if (!slider || !valueEl) return;
 
         const value = Number(slider.value);

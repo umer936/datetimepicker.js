@@ -189,6 +189,8 @@ new DateTimePicker(document.getElementById('demo-picker'), {
 });
 ```
 
+The `theme` object also supports slider-specific fields such as `sliderTrackColor` and `sliderThumbColor`.
+
 ### Initialize Button Picker
 This mode shows the picker when you click a button.
 
@@ -215,6 +217,7 @@ This mode shows the picker when you click a button.
 | `showCalendar`         | `boolean`                | `true`                | Show/hide the calendar grid.                                               |
 | `showDaysOfWeek`       | `boolean`                | `true`                | Show/hide weekday headers.                                                 |
 | `showSliders`          | `boolean`                | `true`                | Show/hide time sliders.                                                    |
+| `showSliderValues`     | `boolean`                | `false`               | Show/hide the numeric value next to each slider.                           |
 | `showUtcToggle`        | `boolean`                | `true`                | Show/hide UTC toggle.                                                      |
 | `showDoyToggle`        | `boolean`                | `false`               | Show/hide day-of-year toggle.                                              |
 | `showSelectedDatetime` | `boolean`                | `true`                | Show/hide readonly datetime display input.                                 |

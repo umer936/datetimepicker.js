@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentMode = 'input';
     let currentTheme = { ...DateTimePicker.defaultTheme };
     let currentOptions = {};
+    let themeSource = 'default';
+    let autoFollowDarkMode = true;
+    const defaultTheme = { ...DateTimePicker.defaultTheme };
 
     const bootstrapToggle = document.getElementById('toggle-bootstrap');
     const darkToggle = document.getElementById('toggle-dark');
@@ -12,6 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const generatedCode = document.getElementById('generated-code');
     const copyCodeBtn = document.getElementById('copy-code-btn');
 
+    function syncThemeToDisplayMode() {
+        if (bootstrapToggle.checked || !autoFollowDarkMode || themeSource !== 'default') return;
+        currentTheme = darkToggle.checked ? { ...presets.Dark } : { ...defaultTheme };
+    }
+
     // Initialize
     bootstrapToggle.checked = false;
     darkToggleContainer.style.display = 'none';
@@ -20,18 +28,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Theme options
     const themeOptions = [
-        { name: 'primaryColor', type: 'color', def: '#0d6efd', help: 'Selected dates color' },
-        { name: 'backgroundColor', type: 'color', def: 'white', help: 'Background color' },
-        { name: 'dowBackgroundColor', type: 'color', def: 'transparent', help: 'Header background' },
-        { name: 'textColor', type: 'color', def: '#000', help: 'Text color' },
-        { name: 'borderColor', type: 'color', def: '#ccc', help: 'Border color' },
-        { name: 'hoverColor', type: 'color', def: '#e0e0ff', help: 'Hover background' },
-        { name: 'disabledColor', type: 'color', def: '#f1f1f1', help: 'Disabled background' },
-        { name: 'dangerColor', type: 'color', def: '#dc3545', help: 'Marker color' },
-        { name: 'borderWidth', type: 'text', def: '1px', help: 'Border width' },
-        { name: 'borderRadius', type: 'text', def: '0.25rem', help: 'Corner radius' },
-        { name: 'buttonBorderRadius', type: 'text', def: '0.25rem', help: 'Button radius (50% = circles)' },
-        { name: 'shadow', type: 'text', def: '0 4px 8px rgba(0, 0, 0, 0.1)', help: 'Box shadow' },
+        { name: 'primaryColor', type: 'color', def: '#0d6efd', help: 'Selected day and focused accents. Works the same in Bootstrap and plain CSS mode.' },
+        { name: 'backgroundColor', type: 'color', def: 'white', help: 'Main picker background. Useful for light or dark previews.' },
+        { name: 'dowBackgroundColor', type: 'color', def: 'transparent', help: 'Days-of-week header background.' },
+        { name: 'textColor', type: 'color', def: '#000', help: 'Main text color inside the picker.' },
+        { name: 'borderColor', type: 'color', def: '#ccc', help: 'Outer border and input borders.' },
+        { name: 'hoverColor', type: 'color', def: '#e0e0ff', help: 'Hover background for day cells and buttons.' },
+        { name: 'disabledColor', type: 'color', def: '#f1f1f1', help: 'Background used for disabled states.' },
+        { name: 'dangerColor', type: 'color', def: '#dc3545', help: 'Marker / danger accent color.' },
+        { name: 'sliderTrackColor', type: 'color', def: '#dddddd', help: 'Slider track color. Great for boosting contrast in dark previews.' },
+        { name: 'sliderThumbColor', type: 'color', def: '#000000', help: 'Slider thumb / handle color.' },
+        { name: 'borderWidth', type: 'text', def: '1px', help: 'Border width used across the picker.' },
+        { name: 'borderRadius', type: 'text', def: '0.25rem', help: 'Corner radius for the calendar shell.' },
+        { name: 'buttonBorderRadius', type: 'text', def: '0.25rem', help: 'Button radius. Use 50% only if you really want circular buttons.' },
+        { name: 'shadow', type: 'text', def: '0 4px 8px rgba(0, 0, 0, 0.1)', help: 'Drop shadow around the picker.' },
     ];
 
     // Preset themes
@@ -46,6 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
             hoverColor: '#404040',
             disabledColor: '#2a2a2a',
             dangerColor: '#dc3545',
+            sliderTrackColor: '#555555',
+            sliderThumbColor: '#e0e0e0',
             borderWidth: '1px',
             borderRadius: '0.25rem',
             buttonBorderRadius: '0.25rem',
@@ -60,42 +72,34 @@ document.addEventListener('DOMContentLoaded', () => {
             hoverColor: '#f0e6ff',
             disabledColor: '#e8e8e8',
             dangerColor: '#ff006e',
+            sliderTrackColor: '#ffd1e6',
+            sliderThumbColor: '#ff006e',
             borderWidth: '2px',
             borderRadius: '8px',
             buttonBorderRadius: '8px',
             shadow: '0 4px 12px rgba(255, 0, 110, 0.2)',
         },
-        'Circles': {
-            primaryColor: '#0d6efd',
-            backgroundColor: 'white',
-            dowBackgroundColor: '#f8f9fa',
-            textColor: '#000',
-            borderColor: '#ccc',
-            hoverColor: '#e0e0ff',
-            disabledColor: '#f1f1f1',
-            dangerColor: '#dc3545',
-            borderWidth: '1px',
-            borderRadius: '0.25rem',
-            buttonBorderRadius: '50%',
-            shadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-        },
     };
 
     // Picker options
     const pickerOptions = [
-        { name: 'language', type: 'text', def: 'en-US', help: 'Locale code' },
-        { name: 'firstDayOfWeek', type: 'number', def: 0, help: 'Week start (0=Sunday)' },
-        { name: 'showCalendar', type: 'checkbox', def: true },
-        { name: 'showDaysOfWeek', type: 'checkbox', def: true },
-        { name: 'showSliders', type: 'checkbox', def: true },
-        { name: 'showUtcToggle', type: 'checkbox', def: true },
-        { name: 'showDoyToggle', type: 'checkbox', def: false },
-        { name: 'showNowButton', type: 'checkbox', def: true },
-        { name: 'showCloseButton', type: 'checkbox', def: true },
-        { name: 'nowSetsTime', type: 'checkbox', def: false },
-        { name: 'sliders', type: 'text', def: 'hours,minutes', help: 'Sliders to show' },
-        { name: 'minDate', type: 'text', def: '', help: 'YYYY-MM-DD' },
-        { name: 'maxDate', type: 'text', def: '', help: 'YYYY-MM-DD' },
+        { name: 'language', type: 'text', def: 'en-US', help: 'Locale code used for month, weekday, and time labels. Bootstrap does not change the language.' },
+        { name: 'firstDayOfWeek', type: 'number', def: 0, help: 'Week start day, where 0 = Sunday and 6 = Saturday.' },
+        { name: 'showCalendar', type: 'checkbox', def: true, help: 'Show or hide the calendar grid. This works the same with Bootstrap on or off.' },
+        { name: 'showDaysOfWeek', type: 'checkbox', def: true, help: 'Show or hide the weekday header row. Bootstrap only changes the visual style.' },
+        { name: 'showSliders', type: 'checkbox', def: true, help: 'Show or hide the time sliders. The underlying time selection still works either way.' },
+        { name: 'showSliderValues', type: 'checkbox', def: false, help: 'Show the numeric value next to each slider. Very handy when Bootstrap is off or in darker themes.' },
+        { name: 'showUtcToggle', type: 'checkbox', def: true, help: 'Show or hide the UTC/local toggle. The label adapts automatically in both style modes.' },
+        { name: 'showDoyToggle', type: 'checkbox', def: false, help: 'Show or hide the day-of-year toggle.' },
+        { name: 'showSelectedDatetime', type: 'checkbox', def: true, help: 'Show or hide the read-only selected datetime field. Useful for debugging output formatting.' },
+        { name: 'showNowButton', type: 'checkbox', def: true, help: 'Show or hide the Now button in the footer.' },
+        { name: 'showCloseButton', type: 'checkbox', def: true, help: 'Show or hide the Close button in the footer.' },
+        { name: 'nowSetsTime', type: 'checkbox', def: false, help: 'When enabled, the Now button copies the current time too, not just the current date.' },
+        { name: 'defaultToUTC', type: 'checkbox', def: false, help: 'Start the picker in UTC mode instead of local time.' },
+        { name: 'sliders', type: 'text', def: 'hours,minutes', help: 'Comma-separated list of sliders to show, such as hours, minutes, seconds, nanoseconds.' },
+        { name: 'datetimeLabel', type: 'text', def: '', help: 'Optional label beside the selected datetime field. Leave blank to use the default.' },
+        { name: 'minDate', type: 'text', def: '', help: 'Minimum selectable date in YYYY-MM-DD format.' },
+        { name: 'maxDate', type: 'text', def: '', help: 'Maximum selectable date in YYYY-MM-DD format.' },
     ];
 
     // Build theme builder
@@ -135,12 +139,29 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = name;
         btn.addEventListener('click', () => {
             currentTheme = { ...presets[name] };
+            themeSource = name.toLowerCase();
+            autoFollowDarkMode = name === 'Default';
             updateThemeInputs();
             applyThemeAndRefresh();
         });
         presetDiv.appendChild(btn);
     }
     themeBuilder.appendChild(presetDiv);
+
+    function refreshHelpText() {
+        const bootstrapState = bootstrapToggle.checked ? 'Bootstrap is on, so the picker preview includes Bootstrap classes and styling.' : 'Bootstrap is off, so the picker uses its built-in CSS only.';
+
+        [...themeOptions, ...pickerOptions].forEach(({ name, help }) => {
+            const input = document.getElementById(`theme-${name}`) || document.getElementById(`opt-${name}`);
+            if (!input) return;
+            const label = input.closest('.form-group')?.querySelector('label');
+            const title = help ? `${help} ${bootstrapState}` : bootstrapState;
+            input.title = title;
+            if (label) label.title = title;
+        });
+
+        bootstrapToggle.title = bootstrapState;
+    }
 
     // Build options config
     const optionsConfig = document.getElementById('options-config');
@@ -178,14 +199,20 @@ document.addEventListener('DOMContentLoaded', () => {
             input.title = help;
             input.addEventListener('change', () => {
                 currentOptions[name] = input.value;
+                    themeSource = 'custom';
+                    autoFollowDarkMode = false;
                 refreshPicker();
                 updateCode();
             });
             div.appendChild(input);
+                    themeSource = 'custom';
+                    autoFollowDarkMode = false;
         }
         optionsConfig.appendChild(div);
         currentOptions[name] = def;
     });
+
+    refreshHelpText();
 
     // Mode tabs
     modeButtons.forEach(btn => {
@@ -206,6 +233,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.setAttribute('data-bs-theme', 'light');
             darkToggle.checked = false;
         }
+        syncThemeToDisplayMode();
+        updateThemeInputs();
+        refreshHelpText();
         refreshPicker();
         updateCode();
     });
@@ -213,6 +243,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dark mode toggle
     darkToggle.addEventListener('change', () => {
         document.body.setAttribute('data-bs-theme', darkToggle.checked ? 'dark' : 'light');
+        syncThemeToDisplayMode();
+        updateThemeInputs();
+        refreshPicker();
+        updateCode();
     });
 
     function updateThemeInputs() {
@@ -224,6 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyThemeAndRefresh() {
         const root = document.documentElement.style;
+        syncThemeToDisplayMode();
+        updateThemeInputs();
         Object.entries(currentTheme).forEach(([key, value]) => {
             const cssVar = `--dtp-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
             if (value) root.setProperty(cssVar, value);
