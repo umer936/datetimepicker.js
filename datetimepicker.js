@@ -11,6 +11,7 @@ class DateTimePicker {
 
         // Display mode: 'inline' | 'input' | 'button'
         mode: 'inline',
+        dateOnly: false,
 
         // Visibility toggles
         showCalendar: true,
@@ -163,9 +164,14 @@ class DateTimePicker {
             this.settings.mode = 'inline';
         }
 
+        this.normalizeDateOnlySettings();
+
         // Initialize selected date. For input mode, respect an existing input value when initialValue is omitted.
         const initialDate = this.resolveInitialDate(element);
         this.selectedDate = isNaN(initialDate.getTime()) ? new Date() : initialDate;
+        if (this.settings.dateOnly) {
+            this.clearTime(this.selectedDate);
+        }
 
         // Placeholder for the container, which will be initialized in `init`
         this.container = null;
@@ -176,6 +182,19 @@ class DateTimePicker {
 
         // Call the initialization method
         this.init(element);
+    }
+
+    normalizeDateOnlySettings() {
+        if (!this.settings.dateOnly) return;
+        this.settings.showSliders = false;
+        this.settings.showUtcToggle = false;
+        this.settings.sliders = [];
+        this.settings.nowSetsTime = false;
+    }
+
+    clearTime(date) {
+        if (!(date instanceof Date) || isNaN(date.getTime())) return;
+        date.setHours(0, 0, 0, 0);
     }
 
     resolveInitialDate(element) {
@@ -601,7 +620,7 @@ class DateTimePicker {
             return this.settings.datetimeLabel;
         }
         const lang = (this.settings.language || 'en-US').split('-')[0];
-        if (lang === 'en') return 'Day Time';
+        if (lang === 'en') return this.settings.dateOnly ? 'Date' : 'Day Time';
         return '';
     }
 
@@ -832,6 +851,9 @@ class DateTimePicker {
         const now = new Date();
 
         this.selectedDate.setFullYear(now.getFullYear(), now.getMonth(), now.getDate());
+        if (this.settings.dateOnly) {
+            this.clearTime(this.selectedDate);
+        }
 
         if (this.settings.nowSetsTime) {
             this.selectedDate.setHours(now.getHours());
@@ -964,6 +986,7 @@ class DateTimePicker {
 
     syncSlidersFromDate(date = this.selectedDate) {
         if (!(date instanceof Date) || isNaN(date.getTime())) return;
+        if (this.settings.dateOnly) return;
 
         const useUTC = this.utcToggle ? this.utcToggle.checked : !!this.settings.defaultToUTC;
         if (this.hoursSlider) {
@@ -1068,12 +1091,33 @@ class DateTimePicker {
         const month = parseInt(this.monthSelect.value, 10);
         if (Number.isNaN(year) || Number.isNaN(month)) return;
         this.selectedDate.setFullYear(year, month);
+        if (this.settings.dateOnly) {
+            this.clearTime(this.selectedDate);
+        }
         this.renderCalendar();
         this.updateSelectedDatetime();
     }
 
     updateSelectedDatetime() {
         const date = new Date(this.selectedDate);
+
+        if (this.settings.dateOnly) {
+            this.clearTime(date);
+            const dateString = this.toDateKey(date);
+            this.selectedDate = new Date(date);
+
+            if (this.settings.showSelectedDatetime && this.selectedDatetime) {
+                this.selectedDatetime.value = dateString;
+            }
+
+            if (this.settings.mode === 'input') {
+                this.triggerElement.value = dateString;
+            }
+
+            if (this.settings.onChange) this.settings.onChange(new Date(date));
+            this.updateAllSliderValues();
+            return;
+        }
 
         const useUTC = this.utcToggle ? this.utcToggle.checked : !!this.settings.defaultToUTC;
         if (useUTC) {
@@ -1184,6 +1228,9 @@ class DateTimePicker {
         if (!parsed) return false;
 
         this.selectedDate = new Date(parsed);
+        if (this.settings.dateOnly) {
+            this.clearTime(this.selectedDate);
+        }
         this.syncSlidersFromDate();
         this.populateYearDropdown();
 

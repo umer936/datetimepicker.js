@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'showSelectedDatetime', type: 'checkbox', def: true, help: 'Show or hide the read-only selected datetime field. Useful for debugging output formatting.' },
         { name: 'showNowButton', type: 'checkbox', def: true, help: 'Show or hide the Now button in the footer.' },
         { name: 'showCloseButton', type: 'checkbox', def: true, help: 'Show or hide the Close button in the footer.' },
+        { name: 'dateOnly', type: 'checkbox', def: false, help: 'Date-only mode. Disables time sliders and UTC toggle, and outputs YYYY-MM-DD values.' },
         { name: 'nowSetsTime', type: 'checkbox', def: false, help: 'When enabled, the Now button copies the current time too, not just the current date.' },
         { name: 'defaultToUTC', type: 'checkbox', def: false, help: 'Start the picker in UTC mode instead of local time.' },
         { name: 'sliders', type: 'text', def: 'hours,minutes', help: 'Comma-separated list of sliders to show, such as hours, minutes, seconds, nanoseconds.' },
@@ -305,12 +306,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentPicker) currentPicker = null;
 
         const options = getOptions();
+        const pickerTitle = options.dateOnly ? 'Pick Date' : 'Pick Date and Time';
         let el;
 
         if (currentMode === 'input') {
             el = document.createElement('input');
             el.type = 'text';
-            el.placeholder = 'Pick date and time';
+            el.placeholder = pickerTitle;
             el.style.width = '100%';
             el.style.padding = '0.5rem';
             el.style.fontSize = '1rem';
@@ -318,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
             el = document.createElement('div');
         } else if (currentMode === 'button') {
             el = document.createElement('button');
-            el.textContent = 'Pick Date and Time';
+            el.textContent = pickerTitle;
             el.style.padding = '0.75rem 1.5rem';
             el.style.fontSize = '1rem';
             el.style.cursor = 'pointer';
