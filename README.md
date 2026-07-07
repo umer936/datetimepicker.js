@@ -58,6 +58,7 @@ If your bundler does not support default import from the minified file, include 
 ## Features
 
 - **Inline, input, or button-based modes** to suit your needs.
+- **Date-only mode** for calendar-only selection with `YYYY-MM-DD` output.
 - **Day of Year (DOY)** toggle for showing the day of the year instead of the date.
 - **Time Sliders** for setting hours, minutes, seconds, and nanoseconds.
 - **Optional slider value labels** when you want the numeric value shown next to each slider.
@@ -148,6 +149,27 @@ This mode shows the picker when you click on the input field.
     useBootstrap: true,
     sliders: ['hours', 'minutes', 'seconds'],
     showSliderValues: false
+  });
+</script>
+```
+
+### Date-Only Mode
+
+Use `dateOnly: true` when you want the picker to work strictly as a date picker.
+
+- Time sliders are disabled/hidden.
+- UTC toggle is hidden.
+- Input/output value is `YYYY-MM-DD`.
+
+```html
+<input type="text" id="date-only-picker" class="form-control" readonly>
+
+<script>
+  new DateTimePicker(document.getElementById('date-only-picker'), {
+    mode: 'input',
+    dateOnly: true,
+    showNowButton: true,
+    language: 'en-US'
   });
 </script>
 ```
@@ -266,6 +288,7 @@ This mode shows the picker when you click a button.
 | `weekdayLabelFormat`   | `string`                 | `'short'`             | Weekday labels: `'long'`, `'short'`, `'narrow'`.                                  |
 | `dateTimeFormat`       | `object \| null`         | `null`                | Optional `Intl.DateTimeFormat` options for local datetime output.                 |
 | `inputTimeZone`        | `'local' \| 'utc'`       | `'local'`             | How naive incoming strings are parsed (`'local'` or `'utc'`).                     |
+| `dateOnly`             | `boolean`                | `false`               | Date-picker mode only: disables time UI/logic and uses `YYYY-MM-DD` output.       |
 | `showCalendar`         | `boolean`                | `true`                | Show/hide the calendar grid.                                                      |
 | `showDaysOfWeek`       | `boolean`                | `true`                | Show/hide weekday headers.                                                        |
 | `showSliders`          | `boolean`                | `true`                | Show/hide time sliders.                                                           |
@@ -345,6 +368,7 @@ If you prefer to style the picker yourself, you can override the CSS styles in y
 You can customize the appearance and behavior of the DateTimePicker by modifying the following elements:
 
 - **Calendar**: Displays a month view where you can select a day.
+- **Date-only mode**: Disable all time controls and output date-only values.
 - **Time Sliders**: Allow users to pick hours, minutes, seconds, and nanoseconds.
 - **UTC Toggle**: Switch between UTC and local time.
 - **Day of Year (DOY)**: Optionally display the day of the year.
