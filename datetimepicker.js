@@ -7,6 +7,7 @@ class DateTimePicker {
         monthLabelFormat: 'long',  // Intl month format: 'long' | 'short' | 'narrow'
         weekdayLabelFormat: 'short', // Intl weekday format: 'long' | 'short' | 'narrow'
         dateTimeFormat: null,      // Optional Intl.DateTimeFormat options for local output
+        inputTimeZone: 'local',    // How to interpret incoming strings without timezone: 'local' | 'utc'
 
         // Display mode: 'inline' | 'input' | 'button'
         mode: 'inline',
@@ -148,6 +149,10 @@ class DateTimePicker {
             this.settings.firstDayOfWeek = 0;
         }
 
+        if (!['local', 'utc'].includes(this.settings.inputTimeZone)) {
+            this.settings.inputTimeZone = 'local';
+        }
+
         this.settings.monthLabelFormat = this.normalizeWidthOption(this.settings.monthLabelFormat, 'long');
         this.settings.weekdayLabelFormat = this.normalizeWidthOption(this.settings.weekdayLabelFormat, 'short');
         this.settings.labels = this.getLocalizedLabels(this.settings.language, userLabels);
@@ -191,8 +196,72 @@ class DateTimePicker {
 
     parseDateLike(value) {
         if (value === null || value === undefined || value === '') return null;
-        const parsed = value instanceof Date ? new Date(value) : new Date(value);
+
+        if (value instanceof Date) {
+            const parsedDate = new Date(value);
+            return isNaN(parsedDate.getTime()) ? null : parsedDate;
+        }
+
+        if (typeof value === 'number') {
+            const parsedNumber = new Date(value);
+            return isNaN(parsedNumber.getTime()) ? null : parsedNumber;
+        }
+
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (!trimmed) return null;
+
+            if (this.hasExplicitTimeZone(trimmed)) {
+                const explicit = new Date(trimmed);
+                return isNaN(explicit.getTime()) ? null : explicit;
+            }
+
+            const naive = this.parseNaiveDateString(trimmed);
+            if (naive) return naive;
+
+            const fallback = new Date(trimmed);
+            return isNaN(fallback.getTime()) ? null : fallback;
+        }
+
+        const parsed = new Date(value);
         return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    hasExplicitTimeZone(value) {
+        // Only treat a trailing offset as timezone when a time component exists.
+        const hasTime = /[T\s]\d{2}:\d{2}/.test(value);
+        return hasTime && /(?:Z|[+-]\d{2}(?::?\d{2})?)$/i.test(value);
+    }
+
+    parseNaiveDateString(value) {
+        const match = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,9}))?)?)?$/);
+        if (!match) return null;
+
+        const year = Number(match[1]);
+        const month = Number(match[2]);
+        const day = Number(match[3]);
+        const hour = match[4] === undefined ? 0 : Number(match[4]);
+        const minute = match[5] === undefined ? 0 : Number(match[5]);
+        const second = match[6] === undefined ? 0 : Number(match[6]);
+        const fraction = match[7] || '';
+        const millisecond = Number(fraction.slice(0, 3).padEnd(3, '0'));
+
+        if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+        if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) return null;
+
+        if (this.settings.inputTimeZone === 'utc') {
+            const asUtc = new Date(Date.UTC(year, month - 1, day, hour, minute, second, millisecond));
+            if (asUtc.getUTCFullYear() !== year || asUtc.getUTCMonth() !== month - 1 || asUtc.getUTCDate() !== day) {
+                return null;
+            }
+            return asUtc;
+        }
+
+        const asLocal = new Date(year, month - 1, day, hour, minute, second, millisecond);
+        if (asLocal.getFullYear() !== year || asLocal.getMonth() !== month - 1 || asLocal.getDate() !== day) {
+            return null;
+        }
+        return asLocal;
     }
 
     normalizeWidthOption(value, fallback) {
@@ -219,9 +288,8 @@ class DateTimePicker {
 
     prepareConstraints() {
         const toDate = (value) => {
-            if (!value) return null;
-            const parsed = value instanceof Date ? new Date(value) : new Date(value);
-            return isNaN(parsed.getTime()) ? null : parsed;
+            if (value === null || value === undefined || value === '') return null;
+            return this.parseDateLike(value);
         };
 
         this.minDate = toDate(this.settings.minDate);
@@ -250,8 +318,8 @@ class DateTimePicker {
         const markers = Array.isArray(this.settings.markers) ? this.settings.markers : [];
         for (const marker of markers) {
             if (!marker || !marker.date) continue;
-            const parsed = marker.date instanceof Date ? new Date(marker.date) : new Date(marker.date);
-            if (isNaN(parsed.getTime())) continue;
+            const parsed = this.parseDateLike(marker.date);
+            if (!parsed) continue;
             const normalizedMarker = {
                 label: typeof marker.label === 'string' ? marker.label : '',
                 tooltip: typeof marker.tooltip === 'string' ? marker.tooltip : '',
