@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'showSelectedDatetime', type: 'checkbox', def: true, help: 'Show or hide the read-only selected datetime field. Useful for debugging output formatting.' },
         { name: 'showNowButton', type: 'checkbox', def: true, help: 'Show or hide the Now button in the footer.' },
         { name: 'showCloseButton', type: 'checkbox', def: true, help: 'Show or hide the Close button in the footer.' },
+        { name: 'closeOnClickOutside', type: 'checkbox', def: true, help: 'Close the picker when clicking outside it (input/button modes). Automatically forced on when showCloseButton is false.' },
         { name: 'dateOnly', type: 'checkbox', def: false, help: 'Date-only mode. Disables time sliders and UTC toggle, and outputs YYYY-MM-DD values.' },
         { name: 'nowSetsTime', type: 'checkbox', def: false, help: 'When enabled, the Now button copies the current time too, not just the current date.' },
         { name: 'defaultToUTC', type: 'checkbox', def: false, help: 'Start the picker in UTC mode instead of local time.' },

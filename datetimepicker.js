@@ -23,6 +23,7 @@ class DateTimePicker {
         showSliderValues: false,
         showNowButton: true,
         showCloseButton: true,
+        closeOnClickOutside: true,
 
         // Sliders: which time components to show
         // renamed from slidersToShow; valid values: 'hours', 'minutes', 'seconds', 'nanoseconds'
@@ -165,6 +166,7 @@ class DateTimePicker {
         }
 
         this.normalizeDateOnlySettings();
+        this.normalizeCloseSettings();
 
         // Initialize selected date. For input mode, respect an existing input value when initialValue is omitted.
         const initialDate = this.resolveInitialDate(element);
@@ -175,6 +177,8 @@ class DateTimePicker {
 
         // Placeholder for the container, which will be initialized in `init`
         this.container = null;
+        this.boundHandleTriggerClick = null;
+        this.boundHandleDocumentClick = null;
 
         // Build normalized lookup structures used during rendering and selection.
         this.prepareConstraints();
@@ -190,6 +194,14 @@ class DateTimePicker {
         this.settings.showUtcToggle = false;
         this.settings.sliders = [];
         this.settings.nowSetsTime = false;
+    }
+
+    normalizeCloseSettings() {
+        // If the close button is hidden there must be another dismiss path —
+        // force outside-click close so the picker is never inescapable.
+        if (!this.settings.showCloseButton) {
+            this.settings.closeOnClickOutside = true;
+        }
     }
 
     clearTime(date) {
@@ -807,7 +819,13 @@ class DateTimePicker {
 
     bindEvents(element) {
         if (element) {
-            element.addEventListener('click', (e) => this.togglePicker(e));
+            this.boundHandleTriggerClick = (e) => this.togglePicker(e);
+            element.addEventListener('click', this.boundHandleTriggerClick);
+        }
+
+        if (this.settings.closeOnClickOutside && this.settings.mode !== 'inline') {
+            this.boundHandleDocumentClick = (e) => this.handleDocumentClick(e);
+            document.addEventListener('click', this.boundHandleDocumentClick);
         }
 
         this.monthSelect.addEventListener('change', () => this.updateCalendarDate());
@@ -845,6 +863,17 @@ class DateTimePicker {
         if (this.settings.showCloseButton) {
             this.closeBtn.addEventListener('click', (e) => this.togglePicker(e));
         }
+    }
+
+    handleDocumentClick(event) {
+        if (!this.isPickerVisible()) return;
+
+        const clickTarget = event.target;
+        if (this.container.contains(clickTarget) || this.triggerElement.contains(clickTarget)) {
+            return;
+        }
+
+        this.closePicker();
     }
 
     setToNow() {
@@ -896,22 +925,36 @@ class DateTimePicker {
     }
 
     togglePicker(event) {
-        event.stopPropagation();
+        if (event && typeof event.stopPropagation === 'function') {
+            event.stopPropagation();
+        }
 
         if (this.settings.mode === 'inline') return;
 
-        const isVisible = this.datetimePicker.style.display === 'block';
-        if (!isVisible) {
-            this.syncFromInputValue();
-            this.positionPicker(event.target);
-            this.datetimePicker.style.display = 'block';
-            this.datetimePicker.parentElement.style.display = 'block';
-            this.datetimePicker.setAttribute('aria-hidden', 'false');
-        } else {
-            this.datetimePicker.style.display = 'none';
-            this.datetimePicker.parentElement.style.display = 'none';
-            this.datetimePicker.setAttribute('aria-hidden', 'true');
+        if (!this.isPickerVisible()) {
+            this.openPicker();
+            return;
         }
+
+        this.closePicker();
+    }
+
+    isPickerVisible() {
+        return this.datetimePicker && this.datetimePicker.style.display === 'block';
+    }
+
+    openPicker() {
+        this.syncFromInputValue();
+        this.positionPicker(this.triggerElement);
+        this.datetimePicker.style.display = 'block';
+        this.datetimePicker.parentElement.style.display = 'block';
+        this.datetimePicker.setAttribute('aria-hidden', 'false');
+    }
+
+    closePicker() {
+        this.datetimePicker.style.display = 'none';
+        this.datetimePicker.parentElement.style.display = 'none';
+        this.datetimePicker.setAttribute('aria-hidden', 'true');
     }
 
     syncFromInputValue() {
@@ -1242,6 +1285,12 @@ class DateTimePicker {
     }
 
     destroy() {
+        if (this.boundHandleDocumentClick) {
+            document.removeEventListener('click', this.boundHandleDocumentClick);
+        }
+        if (this.triggerElement && this.boundHandleTriggerClick) {
+            this.triggerElement.removeEventListener('click', this.boundHandleTriggerClick);
+        }
         if (this.container && this.container.parentNode) {
             this.container.parentNode.removeChild(this.container);
         }

@@ -280,43 +280,44 @@ This mode shows the picker when you click a button.
 
 ## Options
 
-| Option                 | Type                     | Default               | Description                                                                       |
-|------------------------|--------------------------|-----------------------|-----------------------------------------------------------------------------------|
-| `language`             | `string`                 | `'en-US'`             | Locale used by `Intl` formatting.                                                 |
-| `firstDayOfWeek`       | `number`                 | `0`                   | Week start day (`0` Sunday ... `6` Saturday).                                     |
-| `monthLabelFormat`     | `string`                 | `'long'`              | Month labels: `'long'`, `'short'`, `'narrow'`.                                    |
-| `weekdayLabelFormat`   | `string`                 | `'short'`             | Weekday labels: `'long'`, `'short'`, `'narrow'`.                                  |
-| `dateTimeFormat`       | `object \| null`         | `null`                | Optional `Intl.DateTimeFormat` options for local datetime output.                 |
-| `inputTimeZone`        | `'local' \| 'utc'`       | `'local'`             | How naive incoming strings are parsed (`'local'` or `'utc'`).                     |
-| `dateOnly`             | `boolean`                | `false`               | Date-picker mode only: disables time UI/logic and uses `YYYY-MM-DD` output.       |
-| `showCalendar`         | `boolean`                | `true`                | Show/hide the calendar grid.                                                      |
-| `showDaysOfWeek`       | `boolean`                | `true`                | Show/hide weekday headers.                                                        |
-| `showSliders`          | `boolean`                | `true`                | Show/hide time sliders.                                                           |
-| `showSliderValues`     | `boolean`                | `false`               | Show/hide the numeric value next to each slider.                                  |
-| `showUtcToggle`        | `boolean`                | `true`                | Show/hide UTC toggle.                                                             |
-| `showDoyToggle`        | `boolean`                | `false`               | Show/hide day-of-year toggle.                                                     |
-| `showSelectedDatetime` | `boolean`                | `true`                | Show/hide readonly datetime display input.                                        |
-| `showNowButton`        | `boolean`                | `true`                | Show/hide the "Now" button.                                                       |
-| `showCloseButton`      | `boolean`                | `true`                | Show/hide the "Close" button.                                                     |
-| `sliders`              | `string[]`               | `['hours','minutes']` | Slider list from: `hours`, `minutes`, `seconds`, `nanoseconds`.                   |
-| `nowSetsTime`          | `boolean`                | `false`               | If true, "Now" sets date + time; otherwise date only.                             |
-| `datetimeLabel`        | `string \| undefined`    | `undefined`           | Label beside the selected datetime field.                                         |
-| `minDate`              | `Date \| string \| null` | `null`                | Minimum selectable date (inclusive).                                              |
-| `maxDate`              | `Date \| string \| null` | `null`                | Maximum selectable date (inclusive).                                              |
-| `disabledWeekdays`     | `number[]`               | `[]`                  | Weekday indexes to lock (`0..6`).                                                 |
-| `disabledDates`        | `Array<Date\|string>`    | `[]`                  | Specific locked dates.                                                            |
-| `markers`              | `Array<object>`          | `[]`                  | Per-day marker objects (`date`, `label`, `tooltip`, `color`, `className`).        |
-| `showMarkerLegend`     | `boolean`                | `false`               | Show a marker legend in the footer when labeled markers exist.                    |
-| `markerLegendMaxItems` | `number`                 | `6`                   | Maximum marker legend items before showing `+N`.                                  |
-| `labels`               | `object`                 | Locale-aware defaults | Override button/ARIA/toggle labels for localization.                              |
-| `mode`                 | `string`                 | `'inline'`            | Picker mode: `'inline'`, `'input'`, `'button'`.                                   |
-| `useBootstrap`         | `boolean`                | `false`               | Enable Bootstrap style classes.                                                   |
-| `themeClass`           | `string \| string[]`     | `''`                  | Optional CSS preset class(es), e.g. `dtp-theme-bootstrap`, `dtp-theme-dark`.      |
-| `theme`                | `object \| null`         | `null`                | Mapped theme overrides (friendly keys like `primaryColor`, `dowBackgroundColor`). |
-| `themeVariables`       | `object \| null`         | `null`                | Raw CSS variable overrides (`--dtp-*`), applied last and highest priority.        |
-| `onSelect`             | `function \| null`       | `null`                | Called with selected `Date` when a day is picked.                                 |
-| `onChange`             | `function \| null`       | `null`                | Called with current `Date` when date/time changes.                                |
-| `onInvalidSelect`      | `function \| null`       | `null`                | Called with `{ date, reason, cell }` when a locked date is clicked.               |
+| Option                 | Type                     | Default               | Description                                                                                                            |
+|------------------------|--------------------------|-----------------------|------------------------------------------------------------------------------------------------------------------------|
+| `language`             | `string`                 | `'en-US'`             | Locale used by `Intl` formatting.                                                                                      |
+| `firstDayOfWeek`       | `number`                 | `0`                   | Week start day (`0` Sunday ... `6` Saturday).                                                                          |
+| `monthLabelFormat`     | `string`                 | `'long'`              | Month labels: `'long'`, `'short'`, `'narrow'`.                                                                         |
+| `weekdayLabelFormat`   | `string`                 | `'short'`             | Weekday labels: `'long'`, `'short'`, `'narrow'`.                                                                       |
+| `dateTimeFormat`       | `object \| null`         | `null`                | Optional `Intl.DateTimeFormat` options for local datetime output.                                                      |
+| `inputTimeZone`        | `'local' \| 'utc'`       | `'local'`             | How naive incoming strings are parsed (`'local'` or `'utc'`).                                                          |
+| `dateOnly`             | `boolean`                | `false`               | Date-picker mode only: disables time UI/logic and uses `YYYY-MM-DD` output.                                            |
+| `showCalendar`         | `boolean`                | `true`                | Show/hide the calendar grid.                                                                                           |
+| `showDaysOfWeek`       | `boolean`                | `true`                | Show/hide weekday headers.                                                                                             |
+| `showSliders`          | `boolean`                | `true`                | Show/hide time sliders.                                                                                                |
+| `showSliderValues`     | `boolean`                | `false`               | Show/hide the numeric value next to each slider.                                                                       |
+| `showUtcToggle`        | `boolean`                | `true`                | Show/hide UTC toggle.                                                                                                  |
+| `showDoyToggle`        | `boolean`                | `false`               | Show/hide day-of-year toggle.                                                                                          |
+| `showSelectedDatetime` | `boolean`                | `true`                | Show/hide readonly datetime display input.                                                                             |
+| `showNowButton`        | `boolean`                | `true`                | Show/hide the "Now" button.                                                                                            |
+| `showCloseButton`      | `boolean`                | `true`                | Show/hide the "Close" button.                                                                                          |
+| `closeOnClickOutside`  | `boolean`                | `true`                | In `input`/`button` modes, close the picker when clicking outside it. Forced `true` when `showCloseButton` is `false`. |
+| `sliders`              | `string[]`               | `['hours','minutes']` | Slider list from: `hours`, `minutes`, `seconds`, `nanoseconds`.                                                        |
+| `nowSetsTime`          | `boolean`                | `false`               | If true, "Now" sets date + time; otherwise date only.                                                                  |
+| `datetimeLabel`        | `string \| undefined`    | `undefined`           | Label beside the selected datetime field.                                                                              |
+| `minDate`              | `Date \| string \| null` | `null`                | Minimum selectable date (inclusive).                                                                                   |
+| `maxDate`              | `Date \| string \| null` | `null`                | Maximum selectable date (inclusive).                                                                                   |
+| `disabledWeekdays`     | `number[]`               | `[]`                  | Weekday indexes to lock (`0..6`).                                                                                      |
+| `disabledDates`        | `Array<Date\|string>`    | `[]`                  | Specific locked dates.                                                                                                 |
+| `markers`              | `Array<object>`          | `[]`                  | Per-day marker objects (`date`, `label`, `tooltip`, `color`, `className`).                                             |
+| `showMarkerLegend`     | `boolean`                | `false`               | Show a marker legend in the footer when labeled markers exist.                                                         |
+| `markerLegendMaxItems` | `number`                 | `6`                   | Maximum marker legend items before showing `+N`.                                                                       |
+| `labels`               | `object`                 | Locale-aware defaults | Override button/ARIA/toggle labels for localization.                                                                   |
+| `mode`                 | `string`                 | `'inline'`            | Picker mode: `'inline'`, `'input'`, `'button'`.                                                                        |
+| `useBootstrap`         | `boolean`                | `false`               | Enable Bootstrap style classes.                                                                                        |
+| `themeClass`           | `string \| string[]`     | `''`                  | Optional CSS preset class(es), e.g. `dtp-theme-bootstrap`, `dtp-theme-dark`.                                           |
+| `theme`                | `object \| null`         | `null`                | Mapped theme overrides (friendly keys like `primaryColor`, `dowBackgroundColor`).                                      |
+| `themeVariables`       | `object \| null`         | `null`                | Raw CSS variable overrides (`--dtp-*`), applied last and highest priority.                                             |
+| `onSelect`             | `function \| null`       | `null`                | Called with selected `Date` when a day is picked.                                                                      |
+| `onChange`             | `function \| null`       | `null`                | Called with current `Date` when date/time changes.                                                                     |
+| `onInvalidSelect`      | `function \| null`       | `null`                | Called with `{ date, reason, cell }` when a locked date is clicked.                                                    |
 
 ## Example
 
@@ -326,6 +327,7 @@ This mode shows the picker when you click a button.
 <script>
   new DateTimePicker(document.getElementById('my-datetime-picker'), {
     mode: 'inline',
+    closeOnClickOutside: true,
     showUtcToggle: true,
     showDoyToggle: true,
     language: 'en-US',
