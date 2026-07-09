@@ -101,6 +101,11 @@ class DateTimePicker {
             normalized.onChange = normalized.onTimeChange;
         }
 
+        // When starting in UTC mode, parse timezone-naive values as UTC unless explicitly overridden.
+        if (normalized.defaultToUTC === true && !Object.prototype.hasOwnProperty.call(normalized, 'inputTimeZone')) {
+            normalized.inputTimeZone = 'utc';
+        }
+
         return normalized;
     }
 
@@ -153,7 +158,10 @@ class DateTimePicker {
         }
 
         if (!['local', 'utc'].includes(this.settings.inputTimeZone)) {
-            this.settings.inputTimeZone = 'local';
+            this.settings.inputTimeZone = this.settings.defaultToUTC ? 'utc' : 'local';
+        }
+        if (![null, true, false].includes(this.settings.utcSuffix)) {
+            this.settings.utcSuffix = null;
         }
 
         this.settings.monthLabelFormat = this.normalizeWidthOption(this.settings.monthLabelFormat, 'long');
@@ -845,7 +853,8 @@ class DateTimePicker {
 
         this.utcToggle.addEventListener('change', () => {
             this.syncSlidersFromDate();
-            this.updateSelectedDatetime();
+            // Toggling UTC should only change the displayed clock values, not shift the underlying timestamp.
+            this.updateAllSliderValues();
             this.updateUtcToggleLabel();
         });
 

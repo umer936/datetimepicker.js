@@ -188,6 +188,29 @@ new DateTimePicker(document.getElementById('input-picker'), {
 
 Strings that already include a timezone (for example `Z` or `+02:00`) still use that explicit timezone.
 
+### Display UTC without `Z` (when your UI already says UTC)
+
+If your field label already makes timezone explicit (for example `Start Time (UTC)`), `defaultToUTC: true` now uses UTC parsing for naive input values automatically and keeps the default no-`Z` output style.
+
+```javascript
+new DateTimePicker(document.getElementById('start-time'), {
+  mode: 'input',
+  defaultToUTC: true
+});
+```
+
+You can still force output suffix behavior explicitly when needed:
+
+```javascript
+new DateTimePicker(document.getElementById('start-time'), {
+  mode: 'input',
+  defaultToUTC: true,
+  utcSuffix: false
+});
+```
+
+This keeps values like `2026-07-09T21:38` and avoids accidental local-time conversion.
+
 ### Initialize all `.datepick` inputs explicitly
 
 If you want the helper to wire up every `.datepick` element on the page, call it explicitly where you need it:
@@ -288,6 +311,8 @@ This mode shows the picker when you click a button.
 | `weekdayLabelFormat`   | `string`                 | `'short'`             | Weekday labels: `'long'`, `'short'`, `'narrow'`.                                                                       |
 | `dateTimeFormat`       | `object \| null`         | `null`                | Optional `Intl.DateTimeFormat` options for local datetime output.                                                      |
 | `inputTimeZone`        | `'local' \| 'utc'`       | `'local'`             | How naive incoming strings are parsed (`'local'` or `'utc'`).                                                          |
+| `defaultToUTC`         | `boolean`                | `false`               | Initial UTC toggle state and UTC-first formatting behavior.                                                            |
+| `utcSuffix`            | `boolean \| null`        | `null`                | Controls whether UTC output includes trailing `Z` (`false` hides it).                                                  |
 | `dateOnly`             | `boolean`                | `false`               | Date-picker mode only: disables time UI/logic and uses `YYYY-MM-DD` output.                                            |
 | `showCalendar`         | `boolean`                | `true`                | Show/hide the calendar grid.                                                                                           |
 | `showDaysOfWeek`       | `boolean`                | `true`                | Show/hide weekday headers.                                                                                             |

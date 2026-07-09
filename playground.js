@@ -98,6 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'dateOnly', type: 'checkbox', def: false, help: 'Date-only mode. Disables time sliders and UTC toggle, and outputs YYYY-MM-DD values.' },
         { name: 'nowSetsTime', type: 'checkbox', def: false, help: 'When enabled, the Now button copies the current time too, not just the current date.' },
         { name: 'defaultToUTC', type: 'checkbox', def: false, help: 'Start the picker in UTC mode instead of local time.' },
+        { name: 'inputTimeZone', type: 'text', def: 'local', help: 'How naive datetime strings are parsed: "local" or "utc". When defaultToUTC is true and this is not set, UTC parsing is used automatically.' },
+        { name: 'utcSuffix', type: 'text', def: '', help: 'Controls UTC output suffix. Leave blank for auto behavior, set false to hide Z, or true to force Z.' },
         { name: 'sliders', type: 'text', def: 'hours,minutes', help: 'Comma-separated list of sliders to show, such as hours, minutes, seconds, nanoseconds.' },
         { name: 'datetimeLabel', type: 'text', def: '', help: 'Optional label beside the selected datetime field. Leave blank to use the default.' },
         { name: 'minDate', type: 'text', def: '', help: 'Minimum selectable date in YYYY-MM-DD format.' },
@@ -201,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const input = document.createElement('input');
             input.type = type;
             input.id = `opt-${name}`;
+            input.className = 'playground-input';
             input.value = def;
             input.title = help;
             input.addEventListener('change', () => {
@@ -215,6 +218,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     refreshHelpText();
+
+    function applyPlaygroundControlClasses() {
+        const useBootstrapClasses = bootstrapToggle.checked;
+        document.querySelectorAll('.playground-input').forEach((input) => {
+            input.classList.toggle('form-control', useBootstrapClasses);
+            input.classList.toggle('form-control-sm', useBootstrapClasses);
+        });
+    }
+
+    applyPlaygroundControlClasses();
 
     // Mode tabs
     modeButtons.forEach(btn => {
@@ -237,6 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         syncThemeToDisplayMode();
         updateThemeInputs();
+        applyPlaygroundControlClasses();
         refreshHelpText();
         refreshPicker();
         updateCode();
@@ -292,6 +306,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (name === 'sliders') {
                     // Parse sliders string into array
                     opts[name] = input.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                } else if (name === 'utcSuffix') {
+                    const raw = (input.value || '').trim().toLowerCase();
+                    if (!raw) {
+                        // Keep library default behavior when the field is left blank.
+                        delete opts[name];
+                    } else if (raw === 'false') {
+                        opts[name] = false;
+                    } else if (raw === 'true') {
+                        opts[name] = true;
+                    } else {
+                        delete opts[name];
+                    }
                 } else {
                     opts[name] = input.value || undefined;
                 }
