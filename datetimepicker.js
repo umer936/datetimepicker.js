@@ -68,6 +68,7 @@ class DateTimePicker {
 
         // UTC default
         defaultToUTC: false,
+        utcSuffix: null,           // null = auto: false when defaultToUTC is true, true otherwise
 
         // Callbacks
         onSelect: null,            // renamed from onDateSelect; called with (Date) on day click
@@ -1141,6 +1142,40 @@ class DateTimePicker {
         this.updateSelectedDatetime();
     }
 
+    formatUTCString(date) {
+        const sliders = this.settings.sliders || [];
+        const pad = (n, w = 2) => String(n).padStart(w, '0');
+
+        const yyyy = date.getUTCFullYear();
+        const mo   = pad(date.getUTCMonth() + 1);
+        const dd   = pad(date.getUTCDate());
+        let result = `${yyyy}-${mo}-${dd}`;
+
+        const hasHours   = sliders.includes('hours');
+        const hasMinutes = sliders.includes('minutes');
+        const hasSeconds = sliders.includes('seconds');
+        const hasNano    = sliders.includes('nanoseconds');
+
+        if (hasHours || hasMinutes || hasSeconds || hasNano) {
+            result += `T${pad(date.getUTCHours())}`;
+            if (hasMinutes || hasSeconds || hasNano) {
+                result += `:${pad(date.getUTCMinutes())}`;
+                if (hasSeconds || hasNano) {
+                    result += `:${pad(date.getUTCSeconds())}`;
+                    if (hasNano) {
+                        result += `.${pad(date.getUTCMilliseconds(), 3)}`;
+                    }
+                }
+            }
+            const appendZ = this.settings.utcSuffix === null
+                ? !this.settings.defaultToUTC
+                : this.settings.utcSuffix !== false;
+            if (appendZ) result += 'Z';
+        }
+
+        return result;
+    }
+
     updateSelectedDatetime() {
         const date = new Date(this.selectedDate);
 
@@ -1176,7 +1211,7 @@ class DateTimePicker {
         }
 
         const datetimeString = useUTC
-            ? date.toISOString()
+            ? this.formatUTCString(date)
             : (this.settings.dateTimeFormat
                 ? date.toLocaleString(this.settings.language, this.settings.dateTimeFormat)
                 : date.toLocaleString(this.settings.language));
