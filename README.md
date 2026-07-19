@@ -85,9 +85,9 @@ Use one of these:
 
 If you are publishing new versions of this library, use this flow:
 
-> This repo's build workflow now auto-creates a GitHub tag/release as `v<package.json version>` on pushes to `main` (if that tag does not already exist).
+> This repo's build workflow auto-creates/updates a GitHub release as `v<package.json version>` on pushes to `main`.
 >
-> npm auto-publish is currently disabled in CI. If re-enabled later, configure repository secret `NPM_TOKEN` (npm automation token).
+> npm auto-publish is enabled in CI for pushes to `main` when repository secret `NPM_TOKEN` is configured.
 
 1. Build and tag a release:
 
@@ -101,14 +101,25 @@ git push origin main
 git push origin vX.Y.Z
 ```
 
-2. (Recommended) publish to npm:
+2. Configure npm token once (GitHub repository secret):
+
+   - Name: `NPM_TOKEN`
+   - Value: npm automation token with publish access to `datetimepicker.js`
+
+3. Publish flow (automated):
+
+   - Bump `package.json` version.
+   - Push to `main`.
+   - CI builds and publishes only if that exact version does not already exist on npm.
+
+4. (Optional) publish to npm manually:
 
 ```powershell
 npm login
 npm publish --access public
 ```
 
-3. CDN endpoints:
+5. CDN endpoints:
    - jsDelivr (GitHub tag):
      - `https://cdn.jsdelivr.net/gh/umer936/datetimepicker.js@vX.Y.Z/dist/datetimepicker.min.js`
      - `https://cdn.jsdelivr.net/gh/umer936/datetimepicker.js@vX.Y.Z/dist/datetimepicker.min.css`

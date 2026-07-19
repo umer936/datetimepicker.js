@@ -97,9 +97,8 @@ jobs:
           allowUpdates: true
 
   publish-npm:
-    # Temporarily disabled. Re-enable by restoring the original `if` condition.
-    if: false
-    needs: [build, commit-dist]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.NPM_TOKEN != ''
+    needs: [build]
     runs-on: ubuntu-latest
 
     permissions:
