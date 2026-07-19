@@ -85,11 +85,11 @@ Use one of these:
 
 If you are publishing new versions of this library, use this flow:
 
-> This repo's build workflow auto-creates/updates a GitHub release as `v<package.json version>` on pushes to `main`.
+> GitHub releases are the source of truth for versions.
 >
-> npm auto-publish is enabled in CI for pushes to `main` when repository secret `NPM_TOKEN` is configured.
+> When you publish a GitHub release named `vX.Y.Z`, CI syncs `package.json` to that tag and publishes the same version to npm if `NPM_TOKEN` is configured.
 
-1. Build and tag a release:
+1. Prepare the release commit and tag:
 
 ```powershell
 npm install
@@ -106,11 +106,10 @@ git push origin vX.Y.Z
    - Name: `NPM_TOKEN`
    - Value: npm automation token with publish access to `datetimepicker.js`
 
-3. Publish flow (automated):
+3. Publish flow:
 
-   - Bump `package.json` version.
-   - Push to `main`.
-   - CI builds and publishes only if that exact version does not already exist on npm.
+   - Create/publish the GitHub release for tag `vX.Y.Z`.
+   - CI reads `vX.Y.Z`, updates `package.json` to `X.Y.Z` during the release job, and publishes only if that exact version does not already exist on npm.
 
 4. (Optional) publish to npm manually:
 
