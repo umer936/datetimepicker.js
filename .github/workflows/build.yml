@@ -97,9 +97,12 @@ jobs:
           allowUpdates: true
 
   publish-npm:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.NPM_TOKEN != ''
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [build]
     runs-on: ubuntu-latest
+
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     permissions:
       contents: read
@@ -137,11 +140,15 @@ jobs:
           fi
 
       - name: Publish package to npm
-        if: steps.npmcheck.outputs.exists == 'false'
+        if: env.NPM_TOKEN != '' && steps.npmcheck.outputs.exists == 'false'
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Skip publish (NPM_TOKEN not configured)
+        if: env.NPM_TOKEN == ''
+        run: echo "NPM_TOKEN is not configured. Skipping npm publish."
+
       - name: Skip publish (already exists)
-        if: steps.npmcheck.outputs.exists == 'true'
+        if: env.NPM_TOKEN != '' && steps.npmcheck.outputs.exists == 'true'
         run: echo "Version ${{ steps.pkg.outputs.version }} already exists on npm. Skipping publish."
