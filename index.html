@@ -64,7 +64,7 @@
 
         .container-main {
             display: grid;
-            grid-template-columns: 1fr 350px;
+            grid-template-columns: 1fr 400px;
             gap: 1.5rem;
             max-width: 1400px;
             margin: 0 auto;
@@ -227,6 +227,7 @@
 
         input[type="text"],
         input[type="number"],
+        input[type="date"],
         textarea,
         select {
             width: 100%;
@@ -239,11 +240,16 @@
 
         body[data-bs-theme="dark"] input[type="text"],
         body[data-bs-theme="dark"] input[type="number"],
+        body[data-bs-theme="dark"] input[type="date"],
         body[data-bs-theme="dark"] textarea,
         body[data-bs-theme="dark"] select {
             background-color: #252d3a;
             color: #f1f1f1;
             border-color: #444;
+        }
+
+        body[data-bs-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
         }
 
         .btn {
@@ -288,6 +294,82 @@
             grid-template-columns: 1fr 1fr;
             gap: 0.5rem;
             margin-bottom: 1rem;
+        }
+
+        /* Options panel: compact grouped layout */
+        .options-subheading {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            color: #999;
+            margin: 0 0 0.6rem;
+        }
+
+        .options-subheading:not(:first-child) {
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        body[data-bs-theme="dark"] .options-subheading {
+            color: #7d879b;
+        }
+
+        body[data-bs-theme="dark"] .options-subheading:not(:first-child) {
+            border-top-color: #333b4a;
+        }
+
+        .options-toggles {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.4rem 0.9rem;
+        }
+
+        .options-toggles .form-group {
+            margin-bottom: 0;
+        }
+
+        .options-values {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 0.85rem 0.9rem;
+        }
+
+        .options-values .form-group {
+            margin-bottom: 0;
+        }
+
+        .option-field {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .option-hint {
+            margin-top: 0.3rem;
+            font-size: 0.7rem;
+            line-height: 1.25;
+            color: #8a8a8a;
+        }
+
+        body[data-bs-theme="dark"] .option-hint {
+            color: #8a93a3;
+        }
+
+        /* Theme panel: compact color swatch grid */
+        .theme-colors {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+            gap: 0.75rem 0.7rem;
+        }
+
+        .theme-colors .form-group {
+            margin-bottom: 0;
+        }
+
+        .theme-colors input[type="color"] {
+            height: 34px;
         }
 
         .code-section textarea {

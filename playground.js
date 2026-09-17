@@ -38,10 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'dangerColor', type: 'color', def: '#dc3545', help: 'Marker / danger accent color.' },
         { name: 'sliderTrackColor', type: 'color', def: '#dddddd', help: 'Slider track color. Great for boosting contrast in dark previews.' },
         { name: 'sliderThumbColor', type: 'color', def: '#000000', help: 'Slider thumb / handle color.' },
-        { name: 'borderWidth', type: 'text', def: '1px', help: 'Border width used across the picker.' },
-        { name: 'borderRadius', type: 'text', def: '0.25rem', help: 'Corner radius for the calendar shell.' },
-        { name: 'buttonBorderRadius', type: 'text', def: '0.25rem', help: 'Button radius. Use 50% only if you really want circular buttons.' },
-        { name: 'shadow', type: 'text', def: '0 4px 8px rgba(0, 0, 0, 0.1)', help: 'Drop shadow around the picker.' },
+        { name: 'borderWidth', type: 'text', def: '1px', placeholder: '1px', hint: 'CSS length, e.g. 1px, 2px', help: 'Border width used across the picker.' },
+        { name: 'borderRadius', type: 'text', def: '0.25rem', placeholder: '0.25rem', hint: 'CSS length, e.g. 0.25rem, 8px', help: 'Corner radius for the calendar shell.' },
+        { name: 'buttonBorderRadius', type: 'text', def: '0.25rem', placeholder: '0.25rem', hint: 'CSS length, e.g. 0.25rem, 50%', help: 'Button radius. Use 50% only if you really want circular buttons.' },
+        { name: 'shadow', type: 'text', def: '0 4px 8px rgba(0, 0, 0, 0.1)', placeholder: '0 4px 8px rgba(0,0,0,.1)', hint: 'Any CSS box-shadow value', help: 'Drop shadow around the picker.' },
     ];
 
     // Preset themes
@@ -83,8 +83,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Picker options
     const pickerOptions = [
-        { name: 'language', type: 'text', def: 'en-US', help: 'Locale code used for month, weekday, and time labels. Bootstrap does not change the language.' },
-        { name: 'firstDayOfWeek', type: 'number', def: 0, help: 'Week start day, where 0 = Sunday and 6 = Saturday.' },
+        { name: 'language', type: 'text', def: 'en-US', placeholder: 'en-US',
+          hint: 'BCP-47 locale, e.g. en-US, fr-FR, de-DE, ja-JP',
+          datalist: ['en-US', 'en-GB', 'fr-FR', 'de-DE', 'es-ES', 'it-IT', 'nl-NL', 'pt-BR', 'ja-JP', 'zh-CN', 'ko-KR', 'ar-EG', 'hi-IN', 'ru-RU'],
+          help: 'Locale code used for month, weekday, and time labels. Bootstrap does not change the language.' },
+        { name: 'firstDayOfWeek', type: 'number', def: '', control: 'select',
+          choices: [
+            { value: '', label: 'default · Sunday' },
+            { value: 0, label: '0 · Sunday' },
+            { value: 1, label: '1 · Monday' },
+            { value: 2, label: '2 · Tuesday' },
+            { value: 3, label: '3 · Wednesday' },
+            { value: 4, label: '4 · Thursday' },
+            { value: 5, label: '5 · Friday' },
+            { value: 6, label: '6 · Saturday' },
+          ],
+          hint: 'Blank uses the library default (Sunday)',
+          help: 'Week start day, where 0 = Sunday and 6 = Saturday.' },
         { name: 'showCalendar', type: 'checkbox', def: true, help: 'Show or hide the calendar grid. This works the same with Bootstrap on or off.' },
         { name: 'showDaysOfWeek', type: 'checkbox', def: true, help: 'Show or hide the weekday header row. Bootstrap only changes the visual style.' },
         { name: 'showSliders', type: 'checkbox', def: true, help: 'Show or hide the time sliders. The underlying time selection still works either way.' },
@@ -98,23 +113,61 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'dateOnly', type: 'checkbox', def: false, help: 'Date-only mode. Disables time sliders and UTC toggle, and outputs YYYY-MM-DD values.' },
         { name: 'nowSetsTime', type: 'checkbox', def: false, help: 'When enabled, the Now button copies the current time too, not just the current date.' },
         { name: 'defaultToUTC', type: 'checkbox', def: false, help: 'Start the picker in UTC mode instead of local time.' },
-        { name: 'inputTimeZone', type: 'text', def: 'local', help: 'How naive datetime strings are parsed: "local" or "utc". When defaultToUTC is true and this is not set, UTC parsing is used automatically.' },
-        { name: 'utcSuffix', type: 'text', def: '', help: 'Controls UTC output suffix. Leave blank for auto behavior, set false to hide Z, or true to force Z.' },
-        { name: 'sliders', type: 'text', def: 'hours,minutes', help: 'Comma-separated list of sliders to show, such as hours, minutes, seconds, nanoseconds.' },
-        { name: 'datetimeLabel', type: 'text', def: '', help: 'Optional label beside the selected datetime field. Leave blank to use the default.' },
-        { name: 'minDate', type: 'text', def: '', help: 'Minimum selectable date in YYYY-MM-DD format.' },
-        { name: 'maxDate', type: 'text', def: '', help: 'Maximum selectable date in YYYY-MM-DD format.' },
+        { name: 'inputTimeZone', type: 'text', def: '', control: 'select',
+          choices: [
+            { value: '', label: 'default (auto)' },
+            { value: 'local', label: 'local' },
+            { value: 'utc', label: 'utc' },
+          ],
+          hint: 'Blank = auto (utc when defaultToUTC is on, else local)',
+          help: 'How naive datetime strings are parsed: "local" or "utc". When defaultToUTC is true and this is not set, UTC parsing is used automatically.' },
+        { name: 'utcSuffix', type: 'text', def: '', control: 'select',
+          choices: [
+            { value: '', label: 'auto (default)' },
+            { value: 'true', label: 'true · force Z' },
+            { value: 'false', label: 'false · hide Z' },
+          ],
+          hint: 'Controls the trailing Z on UTC output',
+          help: 'Controls UTC output suffix. Leave blank for auto behavior, set false to hide Z, or true to force Z.' },
+        { name: 'sliders', type: 'text', def: 'hours,minutes', placeholder: 'hours,minutes',
+          hint: 'Comma list of: hours, minutes, seconds, nanoseconds',
+          datalist: ['hours,minutes', 'hours,minutes,seconds', 'hours,minutes,seconds,nanoseconds', 'hours'],
+          help: 'Comma-separated list of sliders to show, such as hours, minutes, seconds, nanoseconds.' },
+        { name: 'datetimeLabel', type: 'text', def: '', placeholder: 'Selected',
+          hint: 'Blank uses the localized default label',
+          help: 'Optional label beside the selected datetime field. Leave blank to use the default.' },
+        { name: 'minDate', type: 'text', def: '', control: 'date',
+          hint: 'Earliest selectable day (YYYY-MM-DD)',
+          help: 'Minimum selectable date in YYYY-MM-DD format.' },
+        { name: 'maxDate', type: 'text', def: '', control: 'date',
+          hint: 'Latest selectable day (YYYY-MM-DD)',
+          help: 'Maximum selectable date in YYYY-MM-DD format.' },
     ];
 
-    // Build theme builder
+    // Small helper shared by the theme and options panels.
+    function makeSubheading(text) {
+        const heading = document.createElement('div');
+        heading.className = 'options-subheading';
+        heading.textContent = text;
+        return heading;
+    }
+
+    // Build theme builder, grouped into "Colors" and "Style"
     const themeBuilder = document.getElementById('theme-builder');
-    themeOptions.forEach(({ name, type, def, help }) => {
+    const themeColorsWrap = document.createElement('div');
+    themeColorsWrap.className = 'theme-colors';
+    const themeStyleWrap = document.createElement('div');
+    themeStyleWrap.className = 'options-values';
+
+    themeOptions.forEach(({ name, type, def, help, placeholder, hint }) => {
+        const isColor = type === 'color';
         const div = document.createElement('div');
-        div.className = 'form-group';
+        div.className = isColor ? 'form-group' : 'form-group option-field';
 
         const label = document.createElement('label');
         label.textContent = name;
         label.title = help;
+        label.setAttribute('for', `theme-${name}`);
         div.appendChild(label);
 
         const input = document.createElement('input');
@@ -122,21 +175,33 @@ document.addEventListener('DOMContentLoaded', () => {
         input.id = `theme-${name}`;
         input.value = def;
         input.title = help;
-        input.addEventListener('change', () => {
+        if (placeholder) input.placeholder = placeholder;
+        if (!isColor) input.className = 'playground-input';
+
+        const onEdit = () => {
             themeSource = 'custom';
             autoFollowDarkMode = false;
             currentTheme[name] = input.value;
             applyThemeAndRefresh();
-        });
-        input.addEventListener('input', () => {
-            themeSource = 'custom';
-            autoFollowDarkMode = false;
-            currentTheme[name] = input.value;
-            applyThemeAndRefresh();
-        });
+        };
+        input.addEventListener('change', onEdit);
+        input.addEventListener('input', onEdit);
         div.appendChild(input);
-        themeBuilder.appendChild(div);
+
+        if (hint) {
+            const hintEl = document.createElement('small');
+            hintEl.className = 'option-hint';
+            hintEl.textContent = hint;
+            div.appendChild(hintEl);
+        }
+
+        (isColor ? themeColorsWrap : themeStyleWrap).appendChild(div);
     });
+
+    themeBuilder.appendChild(makeSubheading('Colors'));
+    themeBuilder.appendChild(themeColorsWrap);
+    themeBuilder.appendChild(makeSubheading('Style'));
+    themeBuilder.appendChild(themeStyleWrap);
 
     // Add preset buttons
     const presetDiv = document.createElement('div');
@@ -154,6 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         presetDiv.appendChild(btn);
     }
+    themeBuilder.appendChild(makeSubheading('Presets'));
     themeBuilder.appendChild(presetDiv);
 
     function refreshHelpText() {
@@ -171,59 +237,118 @@ document.addEventListener('DOMContentLoaded', () => {
         bootstrapToggle.title = bootstrapState;
     }
 
-    // Build options config
+    // Build options config, split into compact "Toggles" and "Values" groups
     const optionsConfig = document.getElementById('options-config');
-    pickerOptions.forEach(({ name, type, def, help }) => {
-        const div = document.createElement('div');
-        div.className = 'form-group';
 
+    const togglesWrap = document.createElement('div');
+    togglesWrap.className = 'options-toggles';
+
+    const valuesWrap = document.createElement('div');
+    valuesWrap.className = 'options-values';
+
+    function commitOption(name, value) {
+        currentOptions[name] = value;
+        refreshPicker();
+        updateCode();
+    }
+
+    pickerOptions.forEach((opt) => {
+        const { name, type, def, help, control, choices, placeholder, hint, datalist } = opt;
+        currentOptions[name] = def;
+
+        // Checkboxes go into the compact toggles grid.
         if (type === 'checkbox') {
+            const div = document.createElement('div');
+            div.className = 'form-group';
+
             const label = document.createElement('label');
             label.className = 'checkbox-label';
             label.title = help;
+
             const input = document.createElement('input');
             input.type = 'checkbox';
             input.id = `opt-${name}`;
             input.checked = def;
             input.title = help;
-            input.addEventListener('change', () => {
-                currentOptions[name] = input.checked;
-                refreshPicker();
-                updateCode();
-            });
+            input.addEventListener('change', () => commitOption(name, input.checked));
+
             label.appendChild(input);
             label.appendChild(document.createTextNode(name));
             div.appendChild(label);
-        } else {
-            const label = document.createElement('label');
-            label.textContent = name;
-            label.title = help;
-            div.appendChild(label);
-
-            const input = document.createElement('input');
-            input.type = type;
-            input.id = `opt-${name}`;
-            input.className = 'playground-input';
-            input.value = def;
-            input.title = help;
-            input.addEventListener('change', () => {
-                currentOptions[name] = input.value;
-                refreshPicker();
-                updateCode();
-            });
-            div.appendChild(input);
+            togglesWrap.appendChild(div);
+            return;
         }
-        optionsConfig.appendChild(div);
-        currentOptions[name] = def;
+
+        // Everything else is a value field (text / number / select / date).
+        const div = document.createElement('div');
+        div.className = 'form-group option-field';
+
+        const label = document.createElement('label');
+        label.textContent = name;
+        label.title = help;
+        label.setAttribute('for', `opt-${name}`);
+        div.appendChild(label);
+
+        let input;
+        if (control === 'select') {
+            input = document.createElement('select');
+            (choices || []).forEach((choice) => {
+                const option = document.createElement('option');
+                option.value = String(choice.value);
+                option.textContent = choice.label;
+                input.appendChild(option);
+            });
+            input.value = String(def);
+        } else {
+            input = document.createElement('input');
+            input.type = control === 'date' ? 'date' : (type === 'number' ? 'number' : 'text');
+            input.value = def;
+            if (placeholder) input.placeholder = placeholder;
+            if (datalist && datalist.length) {
+                const listId = `opt-${name}-list`;
+                const dl = document.createElement('datalist');
+                dl.id = listId;
+                datalist.forEach((value) => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    dl.appendChild(option);
+                });
+                div.appendChild(dl);
+                input.setAttribute('list', listId);
+            }
+        }
+
+        input.id = `opt-${name}`;
+        input.className = 'playground-input';
+        input.title = help;
+        input.addEventListener('change', () => commitOption(name, input.value));
+        div.appendChild(input);
+
+        if (hint) {
+            const hintEl = document.createElement('small');
+            hintEl.className = 'option-hint';
+            hintEl.textContent = hint;
+            div.appendChild(hintEl);
+        }
+
+        valuesWrap.appendChild(div);
     });
+
+    optionsConfig.appendChild(makeSubheading('Toggles'));
+    optionsConfig.appendChild(togglesWrap);
+    optionsConfig.appendChild(makeSubheading('Values'));
+    optionsConfig.appendChild(valuesWrap);
 
     refreshHelpText();
 
     function applyPlaygroundControlClasses() {
         const useBootstrapClasses = bootstrapToggle.checked;
         document.querySelectorAll('.playground-input').forEach((input) => {
-            input.classList.toggle('form-control', useBootstrapClasses);
-            input.classList.toggle('form-control-sm', useBootstrapClasses);
+            const isSelect = input.tagName === 'SELECT';
+            input.classList.toggle('form-control', useBootstrapClasses && !isSelect);
+            input.classList.toggle('form-control-sm', useBootstrapClasses && !isSelect);
+            input.classList.toggle('form-select', useBootstrapClasses && isSelect);
+            input.classList.toggle('form-select-sm', useBootstrapClasses && isSelect);
         });
     }
 
@@ -302,7 +427,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (type === 'checkbox') {
                     opts[name] = input.checked;
                 } else if (type === 'number') {
-                    opts[name] = parseInt(input.value, 10);
+                    const parsed = parseInt(input.value, 10);
+                    // A blank numeric field (e.g. "default") means "leave unset".
+                    opts[name] = Number.isNaN(parsed) ? undefined : parsed;
                 } else if (name === 'sliders') {
                     // Parse sliders string into array
                     opts[name] = input.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
