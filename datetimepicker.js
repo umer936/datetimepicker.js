@@ -215,7 +215,49 @@ class DateTimePicker {
 
     clearTime(date) {
         if (!(date instanceof Date) || isNaN(date.getTime())) return;
-        date.setHours(0, 0, 0, 0);
+        if (this.isUtcMode()) {
+            date.setUTCHours(0, 0, 0, 0);
+        } else {
+            date.setHours(0, 0, 0, 0);
+        }
+    }
+
+    // --- Timezone-aware calendar helpers -------------------------------------
+    // The calendar can display in local time or UTC. All "calendar date" logic
+    // (which day cell is rendered/highlighted, month/year headers, keys, etc.)
+    // must read the year/month/day/weekday in the *active* display timezone so
+    // that an instant like 2026-02-08T00:00Z is shown on Feb 8 rather than being
+    // shifted to the previous/next day by the local timezone offset.
+    isUtcMode() {
+        return this.utcToggle ? this.utcToggle.checked : !!this.settings.defaultToUTC;
+    }
+
+    calYear(date)    { return this.isUtcMode() ? date.getUTCFullYear() : date.getFullYear(); }
+    calMonth(date)   { return this.isUtcMode() ? date.getUTCMonth()    : date.getMonth(); }
+    calDay(date)     { return this.isUtcMode() ? date.getUTCDate()     : date.getDate(); }
+    calWeekday(date) { return this.isUtcMode() ? date.getUTCDay()      : date.getDay(); }
+
+    // Build a midnight Date for the given calendar year/month/day in the active mode.
+    makeCalendarDate(year, month, day) {
+        return this.isUtcMode()
+            ? new Date(Date.UTC(year, month, day))
+            : new Date(year, month, day);
+    }
+
+    // Atomically set the calendar year/month/day on selectedDate while preserving
+    // its time-of-day, in the active display timezone.
+    setSelectedYMD(year, month, day) {
+        if (this.isUtcMode()) {
+            this.selectedDate.setUTCFullYear(year, month, day);
+        } else {
+            this.selectedDate.setFullYear(year, month, day);
+        }
+    }
+
+    // Sync the month/year dropdowns to the currently selected date (active mode).
+    syncDropdownsToSelected() {
+        this.monthSelect.value = this.calMonth(this.selectedDate);
+        this.yearSelect.value  = this.calYear(this.selectedDate);
     }
 
     resolveInitialDate(element) {
@@ -379,7 +421,7 @@ class DateTimePicker {
     }
 
     toDateKey(date) {
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        return `${this.calYear(date)}-${String(this.calMonth(date) + 1).padStart(2, '0')}-${String(this.calDay(date)).padStart(2, '0')}`;
     }
 
     getLabel(key, fallback = '') {
@@ -390,13 +432,13 @@ class DateTimePicker {
     }
 
     isDateDisabled(date) {
-        const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const minOnly = this.minDate ? new Date(this.minDate.getFullYear(), this.minDate.getMonth(), this.minDate.getDate()) : null;
-        const maxOnly = this.maxDate ? new Date(this.maxDate.getFullYear(), this.maxDate.getMonth(), this.maxDate.getDate()) : null;
+        const dateOnly = this.makeCalendarDate(this.calYear(date), this.calMonth(date), this.calDay(date));
+        const minOnly = this.minDate ? this.makeCalendarDate(this.calYear(this.minDate), this.calMonth(this.minDate), this.calDay(this.minDate)) : null;
+        const maxOnly = this.maxDate ? this.makeCalendarDate(this.calYear(this.maxDate), this.calMonth(this.maxDate), this.calDay(this.maxDate)) : null;
 
         if (minOnly && dateOnly < minOnly) return true;
         if (maxOnly && dateOnly > maxOnly) return true;
-        if (this.disabledWeekdaySet.has(date.getDay())) return true;
+        if (this.disabledWeekdaySet.has(this.calWeekday(date))) return true;
         return this.disabledDateSet.has(this.toDateKey(date));
     }
 
@@ -559,7 +601,7 @@ class DateTimePicker {
     }
 
     populateYearDropdown() {
-        const currentYear = this.selectedDate.getFullYear();
+        const currentYear = this.calYear(this.selectedDate);
         if (typeof this._yearRangeStart !== 'number' || typeof this._yearRangeEnd !== 'number') {
             const range = 20;
             this._yearRangeStart = currentYear - Math.floor(range / 2);
@@ -605,7 +647,8 @@ class DateTimePicker {
         } else if (selectedYear === this._yearRangeEnd) {
             this.loadMoreYears('forward', selectedYear);
         }
-        this.selectedDate.setFullYear(selectedYear);
+        this.setSelectedYMD(selectedYear, this.calMonth(this.selectedDate), this.calDay(this.selectedDate));
+        this.syncDropdownsToSelected();
         this.renderCalendar();
         this.updateSelectedDatetime();
     }
@@ -790,13 +833,13 @@ class DateTimePicker {
     }
 
     getDateDisabledReason(date) {
-        const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const minOnly = this.minDate ? new Date(this.minDate.getFullYear(), this.minDate.getMonth(), this.minDate.getDate()) : null;
-        const maxOnly = this.maxDate ? new Date(this.maxDate.getFullYear(), this.maxDate.getMonth(), this.maxDate.getDate()) : null;
+        const dateOnly = this.makeCalendarDate(this.calYear(date), this.calMonth(date), this.calDay(date));
+        const minOnly = this.minDate ? this.makeCalendarDate(this.calYear(this.minDate), this.calMonth(this.minDate), this.calDay(this.minDate)) : null;
+        const maxOnly = this.maxDate ? this.makeCalendarDate(this.calYear(this.maxDate), this.calMonth(this.maxDate), this.calDay(this.maxDate)) : null;
 
         if (minOnly && dateOnly < minOnly) return 'beforeMinDate';
         if (maxOnly && dateOnly > maxOnly) return 'afterMaxDate';
-        if (this.disabledWeekdaySet.has(date.getDay())) return 'disabledWeekday';
+        if (this.disabledWeekdaySet.has(this.calWeekday(date))) return 'disabledWeekday';
         if (this.disabledDateSet.has(this.toDateKey(date))) return 'disabledDate';
         return 'disabled';
     }
@@ -856,6 +899,13 @@ class DateTimePicker {
             // Toggling UTC should only change the displayed clock values, not shift the underlying timestamp.
             this.updateAllSliderValues();
             this.updateUtcToggleLabel();
+            // The active timezone changed, so the same instant may map to a different
+            // calendar day/month/year. Re-sync the headers and calendar so the
+            // highlighted day and output string reflect the newly active timezone.
+            this.populateYearDropdown();
+            this.syncDropdownsToSelected();
+            this.renderCalendar();
+            this.updateSelectedDatetime();
         });
 
         this.doyToggle.addEventListener('change', () => this.renderCalendar());
@@ -889,25 +939,22 @@ class DateTimePicker {
     setToNow() {
         const now = new Date();
 
-        this.selectedDate.setFullYear(now.getFullYear(), now.getMonth(), now.getDate());
-        if (this.settings.dateOnly) {
-            this.clearTime(this.selectedDate);
-        }
-
         if (this.settings.nowSetsTime) {
-            this.selectedDate.setHours(now.getHours());
-            this.selectedDate.setMinutes(now.getMinutes());
-            this.selectedDate.setSeconds(now.getSeconds());
-            this.selectedDate.setMilliseconds(now.getMilliseconds());
-
-            if (this.hoursSlider)       this.hoursSlider.value = now.getHours();
-            if (this.minutesSlider)     this.minutesSlider.value = now.getMinutes();
-            if (this.secondsSlider)     this.secondsSlider.value = now.getSeconds();
-            if (this.nanosecondsSlider) this.nanosecondsSlider.value = now.getMilliseconds() * 1e6;
+            // Copy the full instant, then optionally strip the time for date-only mode.
+            this.selectedDate = new Date(now);
+            if (this.settings.dateOnly) {
+                this.clearTime(this.selectedDate);
+            }
+        } else {
+            // Only move to today's calendar day, preserving the current time-of-day.
+            this.setSelectedYMD(this.calYear(now), this.calMonth(now), this.calDay(now));
+            if (this.settings.dateOnly) {
+                this.clearTime(this.selectedDate);
+            }
         }
 
-        this.monthSelect.value = now.getMonth();
-        this.yearSelect.value  = now.getFullYear();
+        this.syncSlidersFromDate();
+        this.syncDropdownsToSelected();
 
         this.renderCalendar();
         this.populateYearDropdown();
@@ -915,10 +962,9 @@ class DateTimePicker {
     }
 
     changeMonth(delta) {
-        this.selectedDate.setMonth(this.selectedDate.getMonth() + delta);
+        this.setSelectedYMD(this.calYear(this.selectedDate), this.calMonth(this.selectedDate) + delta, this.calDay(this.selectedDate));
         this.populateYearDropdown();
-        this.monthSelect.value = this.selectedDate.getMonth();
-        this.yearSelect.value  = this.selectedDate.getFullYear();
+        this.syncDropdownsToSelected();
         this.renderCalendar();
         this.updateSelectedDatetime();
     }
@@ -926,9 +972,8 @@ class DateTimePicker {
     handleYearInputChange(event) {
         const year = parseInt(event.target.value, 10);
         if (!isNaN(year)) {
-            this.selectedDate.setFullYear(year);
-            this.monthSelect.value = this.selectedDate.getMonth();
-            this.yearSelect.value  = this.selectedDate.getFullYear();
+            this.setSelectedYMD(year, this.calMonth(this.selectedDate), this.calDay(this.selectedDate));
+            this.syncDropdownsToSelected();
             this.renderCalendar();
             this.updateSelectedDatetime();
         }
@@ -981,8 +1026,7 @@ class DateTimePicker {
         this.syncSlidersFromDate();
         this.populateYearDropdown();
 
-        this.monthSelect.value = this.selectedDate.getMonth();
-        this.yearSelect.value = this.selectedDate.getFullYear();
+        this.syncDropdownsToSelected();
         this.renderCalendar();
         this.updateSelectedDatetime();
         this.updateAllSliderValues();
@@ -1005,7 +1049,7 @@ class DateTimePicker {
         this.monthSelect.innerHTML = months
             .map((month, index) => `<option value="${index}">${month}</option>`)
             .join('');
-        this.monthSelect.value = this.selectedDate.getMonth();
+        this.monthSelect.value = this.calMonth(this.selectedDate);
     }
 
     getMonthNames() {
@@ -1015,10 +1059,12 @@ class DateTimePicker {
     }
 
     renderCalendar() {
-        const year  = this.selectedDate.getFullYear();
-        const month = this.selectedDate.getMonth();
-        const firstDay    = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const year  = this.calYear(this.selectedDate);
+        const month = this.calMonth(this.selectedDate);
+        const firstDay    = this.calWeekday(this.makeCalendarDate(year, month, 1));
+        const daysInMonth = this.isUtcMode()
+            ? new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
+            : new Date(year, month + 1, 0).getDate();
 
         this.calendar.innerHTML = '';
         const fragment = document.createDocumentFragment();
@@ -1031,7 +1077,7 @@ class DateTimePicker {
         }
 
         for (let day = 1; day <= daysInMonth; day++) {
-            fragment.appendChild(this.createDayCell(new Date(year, month, day), day));
+            fragment.appendChild(this.createDayCell(this.makeCalendarDate(year, month, day), day));
         }
 
         this.calendar.appendChild(fragment);
@@ -1109,9 +1155,14 @@ class DateTimePicker {
     }
 
     getDayOfYear(date) {
+        if (this.isUtcMode()) {
+            const start = Date.UTC(date.getUTCFullYear(), 0, 1);
+            const current = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+            return Math.floor((current - start) / 86400000) + 1;
+        }
         const start = new Date(date.getFullYear(), 0, 1);
-        const diff  = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000;
-        return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+        const current = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        return Math.floor((current - start) / 86400000) + 1;
     }
 
     handleDateSelection(event) {
@@ -1121,7 +1172,7 @@ class DateTimePicker {
         if (cell.classList.contains('disabled')) {
             if (this.settings.onInvalidSelect) {
                 const [year, month, day] = cell.dataset.date.split('-').map(Number);
-                const invalidDate = new Date(year, month - 1, day);
+                const invalidDate = this.makeCalendarDate(year, month - 1, day);
                 this.settings.onInvalidSelect({
                     date: invalidDate,
                     reason: this.getDateDisabledReason(invalidDate),
@@ -1132,7 +1183,10 @@ class DateTimePicker {
         }
 
         const [year, month, day] = cell.dataset.date.split('-').map(Number);
-        this.selectedDate = new Date(year, month - 1, day);
+        this.setSelectedYMD(year, month - 1, day);
+        if (this.settings.dateOnly) {
+            this.clearTime(this.selectedDate);
+        }
         this.renderCalendar();
         this.updateSelectedDatetime();
 
@@ -1143,7 +1197,7 @@ class DateTimePicker {
         const year  = parseInt(this.yearSelect.value, 10);
         const month = parseInt(this.monthSelect.value, 10);
         if (Number.isNaN(year) || Number.isNaN(month)) return;
-        this.selectedDate.setFullYear(year, month);
+        this.setSelectedYMD(year, month, this.calDay(this.selectedDate));
         if (this.settings.dateOnly) {
             this.clearTime(this.selectedDate);
         }
@@ -1280,9 +1334,9 @@ class DateTimePicker {
 
     isSameDate(date1, date2) {
         return (
-            date1.getFullYear() === date2.getFullYear() &&
-            date1.getMonth()    === date2.getMonth()    &&
-            date1.getDate()     === date2.getDate()
+            this.calYear(date1)  === this.calYear(date2)  &&
+            this.calMonth(date1) === this.calMonth(date2) &&
+            this.calDay(date1)   === this.calDay(date2)
         );
     }
 
@@ -1321,8 +1375,7 @@ class DateTimePicker {
         this.syncSlidersFromDate();
         this.populateYearDropdown();
 
-        this.monthSelect.value = this.selectedDate.getMonth();
-        this.yearSelect.value = this.selectedDate.getFullYear();
+        this.syncDropdownsToSelected();
         this.renderCalendar();
         this.updateSelectedDatetime();
         return true;

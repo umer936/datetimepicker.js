@@ -396,6 +396,65 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Datetime input tester
+    const datetimeInput = document.getElementById('datetime-input');
+    const loadDatetimeBtn = document.getElementById('load-datetime-btn');
+    const datetimeResult = document.getElementById('datetime-input-result');
+
+    function setInputResult(kind, message, detail) {
+        datetimeResult.className = 'input-tester-result';
+        if (kind) datetimeResult.classList.add(kind === 'success' ? 'is-success' : 'is-error');
+        datetimeResult.textContent = message || '';
+        if (detail) {
+            const span = document.createElement('span');
+            span.className = 'result-detail';
+            span.textContent = detail;
+            datetimeResult.appendChild(span);
+        }
+    }
+
+    function loadDatetimeIntoPicker() {
+        const raw = datetimeInput.value.trim();
+        if (!raw) {
+            setInputResult('error', 'Enter a datetime string to load.');
+            return;
+        }
+        if (!currentPicker) {
+            setInputResult('error', 'No active picker to load into.');
+            return;
+        }
+
+        const ok = currentPicker.setDate(raw);
+        if (!ok) {
+            setInputResult('error', `Could not parse "${raw}".`);
+            return;
+        }
+
+        // setDate() already syncs the calendar, sliders and the input/button trigger value.
+        const parsed = currentPicker.getSelectedDate();
+
+        setInputResult(
+            'success',
+            'Parsed successfully.',
+            `Local:  ${parsed.toString()}\nISO/UTC: ${parsed.toISOString()}`
+        );
+    }
+
+    loadDatetimeBtn.addEventListener('click', loadDatetimeIntoPicker);
+    datetimeInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            loadDatetimeIntoPicker();
+        }
+    });
+
+    document.querySelectorAll('.example-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+            datetimeInput.value = chip.textContent;
+            loadDatetimeIntoPicker();
+        });
+    });
+
     // Initial setup
     refreshPicker();
     updateCode();

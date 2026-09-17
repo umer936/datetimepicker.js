@@ -302,6 +302,105 @@
             margin-top: 0.5rem;
         }
 
+        #input-tester-section {
+            min-height: 0;
+        }
+
+        .input-tester-hint {
+            margin: 0 0 0.75rem 0;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        body[data-bs-theme="dark"] .input-tester-hint {
+            color: #aaa;
+        }
+
+        .input-tester-hint code {
+            font-size: 0.75rem;
+        }
+
+        .input-tester-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: stretch;
+        }
+
+        .input-tester-row #datetime-input {
+            flex: 1;
+        }
+
+        .input-tester-row .btn {
+            white-space: nowrap;
+        }
+
+        .input-tester-examples {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: #666;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        body[data-bs-theme="dark"] .input-tester-examples {
+            color: #aaa;
+        }
+
+        .example-chip {
+            padding: 0.2rem 0.55rem;
+            border: 1px solid #ddd;
+            border-radius: 999px;
+            background: #fff;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #333;
+        }
+
+        .example-chip:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+
+        body[data-bs-theme="dark"] .example-chip {
+            background: #252d3a;
+            color: #f1f1f1;
+            border-color: #444;
+        }
+
+        body[data-bs-theme="dark"] .example-chip:hover {
+            background: #2a3340;
+        }
+
+        .input-tester-result {
+            margin-top: 0.85rem;
+            font-size: 0.8rem;
+            min-height: 1.2rem;
+        }
+
+        .input-tester-result.is-success {
+            color: #198754;
+        }
+
+        .input-tester-result.is-error {
+            color: #dc3545;
+        }
+
+        .input-tester-result .result-detail {
+            display: block;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #555;
+            margin-top: 0.25rem;
+            white-space: pre-line;
+        }
+
+        body[data-bs-theme="dark"] .input-tester-result .result-detail {
+            color: #bbb;
+        }
+
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -357,6 +456,29 @@
                 <button class="mode-tab" data-mode="button">Button</button>
             </div>
             <div id="picker-preview"></div>
+        </div>
+
+        <div class="picker-section" id="input-tester-section">
+            <h3>⌨️ Input a datetime</h3>
+            <p class="input-tester-hint">
+                Type a datetime string and load it into the picker above to test how it is parsed.
+                Parsing follows the current <code>inputTimeZone</code> / <code>defaultToUTC</code> options.
+            </p>
+            <div class="input-tester-row">
+                <input type="text" id="datetime-input" class="playground-input"
+                       aria-label="Datetime string to parse"
+                       placeholder="e.g. 2026-09-17T14:30, 2026-09-17, 2026-09-17T14:30:00Z">
+                <button class="btn btn-primary" id="load-datetime-btn">Load</button>
+            </div>
+            <div class="input-tester-examples">
+                Examples:
+                <button type="button" class="example-chip">2026-09-17T14:30</button>
+                <button type="button" class="example-chip">2026-09-17</button>
+                <button type="button" class="example-chip">2026-09-17T14:30:00Z</button>
+                <button type="button" class="example-chip">2026-09-17T14:30:00+05:30</button>
+                <button type="button" class="example-chip">09/17/2026 2:30 PM</button>
+            </div>
+            <div id="datetime-input-result" class="input-tester-result"></div>
         </div>
     </div>
 
